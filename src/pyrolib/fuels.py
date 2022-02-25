@@ -4,14 +4,16 @@
 
 import os
 import sys
-import pkg_resources
 from abc import ABC, abstractmethod
-from math import cos, sin, atan, radians, pow, sqrt, ceil, floor
+from math import atan, ceil, cos, floor, pow, radians, sin, sqrt
 from shutil import copy2
+
 import numpy as np
-from netCDF4 import Dataset
-from bresenham import bresenham
+import pkg_resources
 import yaml
+from bresenham import bresenham
+from netCDF4 import Dataset
+
 try:
     from numba import njit
     has_numba = True

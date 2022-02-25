@@ -3,7 +3,7 @@ doc:
     cd docs && make html
 
 test:
-    pytest --cov=nobvisual 
+    pytest #--cov=nobvisual 
 
 lint:
     pylint src/pyrolib
