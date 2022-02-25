@@ -22,12 +22,14 @@ def test_property_set():
     fuelproperty.set(1.)
     assert fuelproperty.value == 1.
 
+
 def test_property_show(capsys):
     fuelproperty = pl.FuelProperty("test", 0., "-", "none", propertyindex=None)
     fuelproperty.show()
     captured = capsys.readouterr()
-    assert captured.out == "Property    test = 0.000e+00 [-     ] as none\n" 
-     
+    assert captured.out == "Property    test = 0.000e+00 [-     ] as none\n"
+
+
 def test_property_minimal_dict():
     fuelproperty = pl.FuelProperty("test", 0., "-", "none", propertyindex=None)
     mdict = fuelproperty.minimal_dict()
@@ -165,4 +167,3 @@ def test_scenario_show_verbose_1(capsys):
     scenario.show(verbose=1)
     captured = capsys.readouterr()
     assert captured.out == "Fuel index : 1, Fuel class : BalbiFuel, ROS : 0.39 m/s\n"
-    
