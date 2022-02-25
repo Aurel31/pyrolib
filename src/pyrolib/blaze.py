@@ -170,13 +170,13 @@ def _compute_quadrant_area(phi1, phi2, phi3, phi4, nx, ny):
             elif C==30:
                 quadrant_area[j,i] = 1. - _surf70(P1, P4, P3, P2)
             elif C==28:
-                quadrant_area[j,i] = _surf68(P3, P2, P1, P4)
+                quadrant_area[j,i] = _surf68(P3, P2, P4)
             elif C==52:
-                quadrant_area[j,i] = 1. - _surf68(P3, P2, P1, P4)
+                quadrant_area[j,i] = 1. - _surf68(P3, P2, P4)
             elif C==24:
                 quadrant_area[j,i] = _surf22(P1, P3, P4) + _surf22(P1, P3, P2)
             elif C==56:
-                quadrant_area[j,i] = _surf68(P1, P2, P4) + _surf68(P3, P2, P1, P4)
+                quadrant_area[j,i] = _surf68(P1, P2, P4) + _surf68(P3, P2, P4)
             else:
                 print(f'default at ({i}, {j})')
                 quadrant_area[j,i] = 0.
