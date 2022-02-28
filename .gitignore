@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# test files
+FuelMap.nc
+FuelMap2d.nc
+FuelMap.des
+scenario.yml
