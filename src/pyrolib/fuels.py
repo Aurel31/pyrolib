@@ -1542,3 +1542,13 @@ def show_fuel_classes():
     print(f"\n{type(BalbiFuel()).__name__} class is compliant with Balbi's ROS parameterization.")
     print("It contains the following properties with default value:")
     BalbiFuel().print_parameters()
+
+
+def show_default_scenario():
+    """List every scenario file in data/scenario directory
+    """
+    data_dir_content = pkg_resources.resource_listdir(__name__, "data/scenario")
+    print("The following scenario have been found in the default scenario directory:")
+    for file in data_dir_content:
+        if file.endswith('.yml'):
+            print(f"* {file.replace('.yml','')}")

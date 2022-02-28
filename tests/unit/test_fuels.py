@@ -167,3 +167,24 @@ def test_scenario_show_verbose_1(capsys):
     scenario.show(verbose=1)
     captured = capsys.readouterr()
     assert captured.out == "Fuel index : 1, Fuel class : BalbiFuel, ROS : 0.39 m/s\n"
+
+
+def test_show_fuel_classes(capsys):
+    default_list = [
+        'BalbiFuel',
+    ]
+    pl.show_fuel_classes()
+    captured = capsys.readouterr()
+    for fuelclass in default_list:
+        assert f"{fuelclass} class is compliant with" in captured.out
+
+
+def test_show_default_scenario(capsys):
+    default_list = [
+        'DefaultSA.yml',
+        'FireFluxI.yml',
+        ]
+    pl.show_default_scenario()
+    captured = capsys.readouterr()
+    for file in captured.out.split('\n')[1:-1]:
+        assert f"{file[2:]}.yml" in default_list
