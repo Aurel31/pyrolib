@@ -865,25 +865,30 @@ class FuelMap():
         Scenario containing fuel data.
     namelistname : str, optional
         MesoNH namelist name (default: 'EXSEG1.nam').
+    MesoNHversion : str, optional
+            Version of MesoNH needed (>=5.4.4) (default: '5.5.0')
 
 
     """
-    def __init__(self, scenario: Scenario, namelistname='EXSEG1.nam'):
+    def __init__(self, scenario: Scenario, namelistname='EXSEG1.nam', MesoNHversion: str = '5.5.0'):
         self.scenario = scenario
         self.namelist = namelistname
+        self.mnh_version = MesoNHversion
 
-        # Default values for MNH file
-        self.MNHinifile = 'INIFILE'
-        # Default values for MNHBLAZE namelist
+        # Read default values for MNHBLAZE namelist from Default_MNH_namelist.yml
         # Values should be compliant with default_desfmn.f90
-        ###
-        self.cpropag_model = 'SANTONI2011'      # Fire propagation model (default SANTONI2011)
-        self.nrefinx = 1	                    # Refinement ratio X
-        self.nrefiny = 1                        # Refinement ratio Y
+        defaultpath = pkg_resources.resource_stream(__name__, '/'.join(('data', 'Default_MNH_namelist.yml')))
+        with open(defaultpath.name, 'r') as ymlfile:
+            alldata = yaml.safe_load(ymlfile)
+        current_version = f"v{self.mnh_version.replace('.', '')}"
+
+        self.MNHinifile = alldata[current_version]['MNHinifile']
+        self.cpropag_model = alldata[current_version]['cpropag_model']
+        self.nrefinx = alldata[current_version]['nrefinx']
+        self.nrefiny = alldata[current_version]['nrefiny']
+
+        # Default values
         self.xfiremeshsize = np.array([0, 0])   # Fire mesh size (dxf, dyf)
-        ###
-        # End of compliant section
-        ###
         self.firemeshsizes = None
         self.xfiremesh = None
         self.yfiremesh = None
@@ -1140,14 +1145,12 @@ class FuelMap():
             return
         print('WARNING: No information given on what to do. Nothing done')
 
-    def write(self, MesoNHversion: str = '5.5.0', save2dfile: bool = False, verbose: int = 0):
+    def write(self, save2dfile: bool = False, verbose: int = 0):
         """ Write Fuel map as netCFD file named FuelMap.nc
 
         Parameters
         ----------
 
-        MesoNHversion : str, optional
-            Version of MesoNH needed (>5.4.0) (default: '5.5.0')
         save2dfile : bool, optional
             Flag to save 2d version of FuelMap (easier to check fuelmap construction) (default: False)
         verbose : int, optional
@@ -1179,7 +1182,7 @@ class FuelMap():
         NewFile.createDimension('size3', 3)
         NewFile.createDimension('char16', 16)
 
-        MNHversion = np.array(MesoNHversion.split('.'), dtype=np.int)
+        MNHversion = np.array(self.mnh_version.split('.'), dtype=np.int)
         varia = NewFile.createVariable('MNHVERSION', int, ('size3'), fill_value=-2147483647)
         varia.long_name = 'MesoNH version'
         varia.valid_min = np.intc(-2147483646)
@@ -1301,7 +1304,7 @@ class FuelMap():
             NewFile.createDimension('size3', 3)
             NewFile.createDimension('char16', 16)
 
-            MNHversion = np.array(MesoNHversion.split('.'), dtype=np.int)
+            MNHversion = np.array(self.mnh_version.split('.'), dtype=np.int)
             varia = NewFile.createVariable('MNHVERSION', int, ('size3'), fill_value=-2147483647)
             varia.long_name = 'MesoNH version'
             varia.valid_min = np.intc(-2147483646)

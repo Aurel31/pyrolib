@@ -1,0 +1,11 @@
+
+v544:
+  MNHinifile: 'INIFILE'
+  cpropag_model: 'SANTONI2011'
+  nrefinx: 1
+  nrefiny: 1
+v550:
+  MNHinifile: 'INIFILE'
+  cpropag_model: 'SANTONI2011'
+  nrefinx: 1
+  nrefiny: 1
