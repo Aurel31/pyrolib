@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `show_default_scenario` function to print available scenario files in the `data/scenario` directory.
 - `show_fuel_classes` function to print every fuel classes and display fuel properties for each classe.
 - `simplecase.py`, `fuel_classes.py`, `scenario.py` examples.
-- tests for `show_fuel_classes` and `show_default_scenario`
+- tests for `show_fuel_classes` and `show_default_scenario`.
+- add `Default_MNH_namelist.yml` file to store default values of `Méso-NH` namelist.
 
 ## [0.0.1] 2022 / 02 / 28
 

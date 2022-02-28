@@ -55,10 +55,10 @@ Some `Méso-NH` files are included in the example directory to run examples.
 
 `simplecase.py` example provides basic steps to create a fuel map using `pyrolib` tools.
 Some operations can be accelerated with `numba`. `pyrolib` can check if `numba` is installed in your environment. If not, `pyrolib` will show a warning message.
-In this example, the `Méso-NH` domain is $(Nx, Ny) = (20, 10)$ with $\Delta_x = \Delta_y = 25$m. The fire mesh is refined with $\Gamma_x = \Gamma_y = 5$.
+In this example, the `Méso-NH` domain is $(Nx, Ny) = (20, 20)$ with $\Delta_x = \Delta_y = 25$m. The fire mesh is refined with $\Gamma_x = \Gamma_y = 5$.
 The goal of this example is to set:
-- a rectangle burnable area defined by $50 \leqslant x \leqslant 450$ and $50 \leqslant y \leqslant 200$,
-- an ignition patch is set at $t = 10$s with $100 \leqslant x \leqslant 105$ and $120 \leqslant y \leqslant 130$.
+- a rectangle burnable area defined by $50 \leqslant x \leqslant 450$ and $50 \leqslant y \leqslant 450$,
+- an ignition patch is set at $t = 10$s with $100 \leqslant x \leqslant 105$ and $245 \leqslant y \leqslant 255$.
 
 As the rate of spread model defined in the `Méso-NH` namelist, the `BalbiFuel` class shall be used to define the fuel properties.
 
@@ -82,8 +82,8 @@ scenario.add_fuel(fuel1)
 fuelmap = pl.FuelMap(scenario=scenario)
 
 # add fuel patch and ignition patch
-fuelmap.addRectanglePatch(xpos=[50, 450], ypos=[50, 200], fuelindex=1)
-fuelmap.addRectanglePatch(xpos=[100, 105], ypos=[120, 130], ignitiontime=10)
+fuelmap.addRectanglePatch(xpos=[50, 450], ypos=[50, 450], fuelindex=1)
+fuelmap.addRectanglePatch(xpos=[100, 105], ypos=[245, 255], ignitiontime=10)
 
 # write FuelMap.nc file and create FuelMap.des
 fuelmap.write(save2dfile=True)
