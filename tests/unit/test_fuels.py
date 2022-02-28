@@ -186,5 +186,5 @@ def test_show_default_scenario(capsys):
         ]
     pl.show_default_scenario()
     captured = capsys.readouterr()
-    for file in captured.out.split('\n')[1:-1]:
+    for file in captured.out.split('\n')[1:-2]:
         assert f"{file[2:]}.yml" in default_list
