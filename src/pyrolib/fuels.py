@@ -42,7 +42,7 @@ class FuelProperty():
     propertyindex : int, optional
         Index of the property in fuel type class to be correctly read in MesoNH, default is `None`.
         If the `propertyindex` is `None`, the property will not be stored in `FuelMap` file.
-        
+
         .. note::
            It needs to be compliant with the current version of Blaze.
     """
@@ -52,7 +52,7 @@ class FuelProperty():
         self.value = value
         self.description = description
         self.propertyindex = propertyindex
-    
+
     def set(self, value):
         """ Set value of the property
 
@@ -66,11 +66,11 @@ class FuelProperty():
 
     def show(self):
         """ Print formatted property information.
-        The following format is used:  
-        Property `name` = `value` [`Unit`] as `description`        
+        The following format is used:
+        Property `name` = `value` [`Unit`] as `description`
         """
         print(f'Property {self.name:>7s} = {self.value:5.3e} [{self.unit:<6s}] as {self.description:s}')
-    
+
     def minimal_dict(self):
         """ | Construct the minimal dictionnary of the class.
         |  The minimal dictionnay contains the value, the unit and the descrition of the class.
@@ -101,7 +101,7 @@ class BaseFuel(ABC):
             NotImplementedError: if not defined in the inherited fuel class.
         """
         raise NotImplementedError
-    
+
     @abstractmethod
     def copy(self):
         """ | Copy current fuel class.
@@ -111,7 +111,7 @@ class BaseFuel(ABC):
             NotImplementedError: if not defined in the inherited fuel class.
         """
         raise NotImplementedError
-    
+
     def _modify_parameter_value(self, **opts):
         """ Modify value as positional argument
 
@@ -119,7 +119,7 @@ class BaseFuel(ABC):
         ----------------
 
         **opts :
-            any valid fuel property of the considered fuel class        
+            any valid fuel property of the considered fuel class
         """
         # get fuel class attributes
         FuelProperties = vars(self)
@@ -129,17 +129,17 @@ class BaseFuel(ABC):
             # check in the parameter is in attributes
             if paramtochange in FuelProperties.keys():
                 FuelProperties[paramtochange].set(opts[paramtochange])
-            
+
     def print_parameters(self):
         """ Show every property of the fuel.
-        
-        List every property of the fuel class and display according to the format of the 
+
+        List every property of the fuel class and display according to the format of the
         :func:`~pyrolib.fuels.FuelProperty.show` method in the
         :class:`~pyrolib.fuels.FuelProperty` class.
         """
         for param in vars(self).values():
             param.show()
-        
+
     def copy_from_sequence(self, sequence, index):
         """ | Copy fuel with changes from given sequence containing properties ensemble.
         | `sequence` is `pandas.DataFrame` array with each column corresponding to a property value.
@@ -164,13 +164,13 @@ class BaseFuel(ABC):
         DictofParam = {}
         for col in sequence.columns:
             DictofParam[col] = sequence.at[index,col]
-        
+
         return self.copy(**DictofParam)
-    
+
     def minimal_dict(self, compact: bool):
         """ Construct the minimal dictionnary of the class.
 
-        The minimal dictionnay contains the class name (key: class) and 
+        The minimal dictionnay contains the class name (key: class) and
         the dictionnary of minimal dictionnaries of each :class:`~pyrolib.fuels.FuelProperty` attributes (key: properties).
         If `compact` is `True` then the dictionnary of :class:`~pyrolib.fuels.FuelProperty` attributes `value` are stored instead
         of minimal dicctionnaries.
@@ -179,7 +179,7 @@ class BaseFuel(ABC):
         ----------
 
         compact : bool
-            If `True`, return 
+            If `True`, return
 
         Returns
         -------
@@ -200,7 +200,7 @@ class BaseFuel(ABC):
         else:
             for param in FuelProperties.keys():
                 propertiesdict[param] = FuelProperties[param].minimal_dict()
-        
+
         minimaldict = {'class': type(self).__name__, 'properties': propertiesdict}
         return minimaldict
 
@@ -216,8 +216,8 @@ class BaseFuel(ABC):
         fuelindex : int
             Index of fuel to store
         nbofproperties : int
-            number 
-        
+            number
+
         Returns
         -------
 
@@ -230,16 +230,16 @@ class BaseFuel(ABC):
         for parameter in vars(self).values():
             if parameter.propertyindex is not None:
                 PropertyVector[parameter.propertyindex] = parameter.value
-        
+
         return PropertyVector
 
 
 class BalbiFuel(BaseFuel):
     """ Class of fuel for Balbi rate of spread model [1]_.
 
-    New fuel class is set with default value. 
+    New fuel class is set with default value.
     Any fuel property can be passed explicitely to the constructor to set a different vaklue than the default one.
-    
+
     Other Parameters
     ----------------
 
@@ -303,8 +303,8 @@ class BalbiFuel(BaseFuel):
     >>> import pyrolib.fuels as pyf
     >>> # create a new fuel class with default value.
     >>> F1 = pyf.BalbiFuel()
-    >>> # create a new fuel class with default value 
-    >>> # except for `e` and `Md` where a new value is set. 
+    >>> # create a new fuel class with default value
+    >>> # except for `e` and `Md` where a new value is set.
     >>> F2 = pyf.BalbiFuel(e=2, Md=0.1)
     """
     def __init__(self, **opts):
@@ -331,10 +331,10 @@ class BalbiFuel(BaseFuel):
         self.r00    = FuelProperty(name='r00',     value=2e-5,     unit='-',            description='Model constant',               propertyindex=21)
         self.wind   = FuelProperty(name='wind',    value=0.,       unit='m/s',          description='Wind at mid-flame'                             )
         self.slope  = FuelProperty(name='slope',   value=0.,       unit='deg',          description='Slope'                                         )
-        
+
         # Modify from default
         self._modify_parameter_value(**opts)
-    
+
     def copy(self, **opts):
         """ Copy fuel class to a new fuel class object.
 
@@ -355,8 +355,8 @@ class BalbiFuel(BaseFuel):
         >>> import pyrolib.fuels as pyf
         >>> # create a new fuel class with default value.
         >>> F1 = pyf.BalbiFuel()
-        >>> # copy the fuel class with default value 
-        >>> # except for `e` and `Md` where a new value is set. 
+        >>> # copy the fuel class with default value
+        >>> # except for `e` and `Md` where a new value is set.
         >>> F2 = F1.copy(e=2, Md=0.1)
         """
         # get dictionary of variable for self and store values in dictionary
@@ -382,7 +382,7 @@ class BalbiFuel(BaseFuel):
 
         References
         ----------
-        
+
         .. [2] Costes, A., Rochoux, M. C., Lac, C., & Masson, V. (2021).
                Subgrid-scale fire front reconstruction for ensemble coupled atmosphere-fire simulations of the FireFlux I experiment.
                Fire Safety Journal, 126, 103475.
@@ -431,33 +431,33 @@ class Scenario():
 
     A dictionnary of fuel class called `fuels` store fuel class objects.
     The key is the fuel class type name (ex: BalbiFuel) with an index.
-    
+
     .. note::
        The index correspond to the number of fuel class type stored in the scenario.
 
        example : If the scenario contains 3 `BalbiFuel` classes and 2 `RothermelFuel` classes,
-       then the keys in the `fuels` dictionnary will be `BalbiFuel1`, `BalbiFuel2`, `BalbiFuel3`, 
+       then the keys in the `fuels` dictionnary will be `BalbiFuel1`, `BalbiFuel2`, `BalbiFuel3`,
        `RothermelFuel1`, and `RothermelFuel2`.
 
     A `Scenario` class can be saved/loaded as `.yml` file.
-    Two configurations of yml files can be used : 
+    Two configurations of yml files can be used :
 
     - *compact* : Only the name and the value of each property is stored for each fuel class in the scenario.
 
     - *not compact* : The name, the description, the unit and the value of each property is stored for erach fuel class in the scenario.
-    
+
     .. note::
        Some basic scenarii are already in the package.
        The following configurations are available with the package:
 
        - FireFluxI
-       
+
        - DefaultSA (Sensitivity Analysis study)
-    
+
     Parameters
     ----------
 
-    name : str, optional 
+    name : str, optional
         Short name of the scenario (default: 'Scenario')
     longname : str, optional
         Long name of the scenario (default: `None`).
@@ -466,7 +466,7 @@ class Scenario():
         Various information on the scenario like a reference (default: '')
     load : str, optional
         name of file to load directly after class initialisation
-    
+
     Attributes
     ----------
 
@@ -485,7 +485,7 @@ class Scenario():
 
         if load is not None:
             self.load(filename=load)
-    
+
     def add_fuel(self, fuel):
         """ Add fuel to `fuels` dictionnary
 
@@ -502,7 +502,7 @@ class Scenario():
             k += 1
             nameoffuel = f'{type(fuel).__name__}{k}'
         self.fuels[nameoffuel] = fuel
-    
+
     def add_fuels(self, *fuels):
         """ Add several fuels to `fuels` dictionnary
 
@@ -514,7 +514,7 @@ class Scenario():
         """
         for fuel in fuels:
             self.add_fuel(fuel)
-    
+
     def save(self, filename=None, compact=True):
         """ Save scenario fuels in yml file
 
@@ -523,7 +523,7 @@ class Scenario():
 
         filename : str, optional
             Name of the yml file (default: `self.name.yml`).
-            If the `filename` does not end with '.yml', the extension is added. 
+            If the `filename` does not end with '.yml', the extension is added.
         compact : bool, optional
             Use compact format to save yml file (default: True)
         """
@@ -534,7 +534,7 @@ class Scenario():
             fname = filename
         else:
             fname = filename + '.yml'
-        
+
         # create data to store
         minimal_dict_of_fuels = {}
         for fuel in self.fuels.keys():
@@ -567,7 +567,7 @@ class Scenario():
             fname = filename + '.yml'
         # Check default case
         try:
-            defaultpath = pkg_resources.resource_stream(__name__, '/'.join(('data', fname)))
+            defaultpath = pkg_resources.resource_stream(__name__, '/'.join(('data/scenario', fname)))
             defaultexists = os.path.exists(defaultpath.name)
         except:
             defaultexists = False
@@ -620,7 +620,7 @@ class Scenario():
                     print('ERROR : cannot find file compacity variable: <isCompact> in file. Reading stopped.')
             else:
                 print('ERROR : cannot find Fuels in file.')
-    
+
     def getR(self):
         """ Get rate of spread for each fuel contained in the scenario
 
@@ -641,10 +641,10 @@ class Scenario():
 
         verbose : int, optional
             level of verbosity (default: 0)
-            
+
             - 0 : show fuels index and name
             - 1 : show fuels index, name and no wind no slope rate of spread
-            - 2 : show fuels index, name, no wind/slope ROS and every fuel properties 
+            - 2 : show fuels index, name, no wind/slope ROS and every fuel properties
         """
         if verbose == 2:
             # verbose level 2
@@ -655,7 +655,7 @@ class Scenario():
                 print(f'Fuel index : {fuelnb}, Fuel class : {fuelclass}, ROS : {self.fuels[fuel].getR():.2f} m/s')
                 self.fuels[fuel].print_parameters()
                 print('')
-        
+
         elif verbose == 1:
             # verbose level 1
             # print names and ROS
@@ -669,7 +669,7 @@ class Scenario():
             for fuel in self.fuels.keys():
                 fuelnb = fuel.replace(type(self.fuels[fuel]).__name__, '')
                 fuelclass = fuel.replace(fuelnb, '')
-                print(f'Fuel index : {fuelnb}, Fuel class : {fuelclass}')         
+                print(f'Fuel index : {fuelnb}, Fuel class : {fuelclass}')
 
 
 class DataPatch(ABC):
@@ -719,7 +719,7 @@ class RectanglePatch(DataPatch):
 
         self.datamask = np.zeros((self.nyf, self.nxf))
         self.getmask(xfiremesh, yfiremesh, XFIREMESHSIZE)
-        
+
     def getmask(self, xfiremesh, yfiremesh, XFIREMESHSIZE):
         """ Compute mask for rectangle patch
 
@@ -771,7 +771,7 @@ class LinePatch(DataPatch):
 
         self.datamask = np.zeros((self.nyf, self.nxf))
         self.getmask(xfiremesh, yfiremesh, XFIREMESHSIZE)
-        
+
     def getmask(self, xfiremesh, yfiremesh, XFIREMESHSIZE):
         """ Compute mask for rectangle patch
 
@@ -825,7 +825,7 @@ class FuelMap():
     This `FuelMap` class allows to create a fuel map object and save it to netcdf format to be an input for a MesoNH-Blaze simulation.
 
     In order to build a fuel map the following file tree is needed:
-    
+
     .. code-block:: text
 
         my_project/
@@ -836,7 +836,7 @@ class FuelMap():
 
     The MesoNH namelist `EXSEG1.nam` is used to retrieved information about fire mesh,
     fire rate of spread parameterization and MesoNH initialization files.
-    The initialization file (here `inifile_MesoNH.nc`) is used to get atmopsheric mesh information. 
+    The initialization file (here `inifile_MesoNH.nc`) is used to get atmopsheric mesh information.
     The MesoNH file `inifile_MesoNH.des` will be duplicated to `FuelMap.des` in order to match MesoNH file reader requirements.
 
     After having set all patches and data treatments to the `FuelMap.fuelmaparray`,
@@ -865,13 +865,13 @@ class FuelMap():
         Scenario containing fuel data.
     namelistname : str, optional
         MesoNH namelist name (default: 'EXSEG1.nam').
-        
+
 
     """
     def __init__(self, scenario: Scenario, namelistname='EXSEG1.nam'):
         self.scenario = scenario
         self.namelist = namelistname
-        
+
         # Default values for MNH file
         self.MNHinifile = 'INIFILE'
         # Default values for MNHBLAZE namelist
@@ -897,7 +897,7 @@ class FuelMap():
         self.fuelmaparray               = np.zeros((self.nbpropertiesfuel, self.firemeshsizes[1], self.firemeshsizes[0]))
         self.ignitionmaparray           = 1e6 * np.zeros((self.firemeshsizes[1], self.firemeshsizes[0]))
         self.walkingignitionmaparray    = -1. * np.ones_like(self.ignitionmaparray)
-    
+
     def __get_info_from_namelist(self):
         """ Retrieve informations on the MesoNH-Blaze run from namelist and initialization file
         """
@@ -905,7 +905,7 @@ class FuelMap():
         # Check if Namelist exists
         if not os.path.exists(f'{projectpath:s}/{self.namelist:s}'):
             raise IOError(f'File {self.namelist:s} not found')
-               
+
         # get MNH init file name
         with open(f'{projectpath:s}/{self.namelist:s}') as F1:
             text = F1.readlines()
@@ -930,7 +930,7 @@ class FuelMap():
         # Check if INIFILE.nc exists
         if not os.path.exists(f'{projectpath:s}/{self.mnhinifile:s}.nc'):
             raise IOError(f'File {self.mnhinifile:s}.nc not found')
-        
+
         # Import XHAT and YHAT
         MNHData = Dataset(f'{projectpath:s}/{self.mnhinifile:s}.nc')
         self.xhat = MNHData.variables['XHAT'][:]
@@ -950,13 +950,13 @@ class FuelMap():
         self.yfiremesh = np.linspace(self.yhat[0], self.yhat[-1] + (self.yhat[1]-self.yhat[0]), self.ny * self.nrefiny, endpoint=False)
         self.yfiremesh += .5 * (self.yfiremesh[1]-self.yfiremesh[0])
 
-    def addRectanglePatch(self, xpos: tuple, ypos: tuple, 
+    def addRectanglePatch(self, xpos: tuple, ypos: tuple,
                           fuelindex: int = None,
                           ignitiontime: float = None,
                           unburnable: bool = None):
         """ Add rectangle patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
-        This method first sets the mask corresponding to the following scheme, 
+        This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
 
         Three data filing methods are available (one needs to be chosen):
@@ -967,7 +967,7 @@ class FuelMap():
         - Ignition : Specify an ignition time for the whole patch.
 
         - Unburnable : Specify that the patch can not burn (ROS = 0 m s-1 in that area).
-        
+
 
         .. aafig::
             +--------------------------------------------------+
@@ -1015,7 +1015,7 @@ class FuelMap():
                      unburnable: bool = None):
         """ Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
-        This method first sets the mask corresponding to the following scheme, 
+        This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
 
         Three data filing methods are available (one needs to be chosen):
@@ -1029,7 +1029,7 @@ class FuelMap():
         - Ignition : Specify an ignition time for the whole patch.
 
         - Unburnable : Specify that the patch can not burn (ROS = 0 m s-1 in that area).
-        
+
         The mask is determined by a bresenham algorithm.
 
 
@@ -1067,27 +1067,27 @@ class FuelMap():
 
         # # assign data
         self.__assign_data_to_data_array(P, fuelindex, walkingignitiontimes, ignitiontime, unburnable)
- 
-    def __assign_data_to_data_array(self, 
+
+    def __assign_data_to_data_array(self,
                                     patch: DataPatch,
                                     fuelindex: int = None,
                                     walkingignitiontimes: tuple = None,
                                     ignitiontime: float = None,
                                     unburnable: bool = None):
         """
-        This function assigns data as a function of argument passed 
+        This function assigns data as a function of argument passed
 
         4 types of data can be allocated in the patch:
             - Fuel properties
                 Select a fuel number (it should be contained in the Scenario object loaded in the FuelMap object).
                 The corresponding fuel properties of the selected Fuel are assigned in the patch
-            
+
             - Walking ignition times (only for LinePatch)
                 allocate ignition time from point A (x0, y0) at ta to point B (x1, y1) at tb with tb > ta
                 The ignition time along the line is linearly interpolated with the distance relative to point A.
 
             - Ignition time
-                Modify the ignition map with the specified time. 
+                Modify the ignition map with the specified time.
                 The whole patch will ignite at the same time.
 
             - Unburnable
@@ -1108,7 +1108,7 @@ class FuelMap():
             else:
                 print(f'Fuel {fuelname} Not found in Scenario. Nothing appended')
             return
-        
+
         # case 2 : walking ignition process
         #          (only for LinePatch)
         if walkingignitiontimes is not None:
@@ -1128,7 +1128,7 @@ class FuelMap():
         if ignitiontime is not None:
             self.ignitionmaparray[patch.datamask == 1] = ignitiontime
             return
-        
+
         # case 4 : Unburnable is set
         if unburnable is not None:
             # create property vector of 0
@@ -1206,7 +1206,7 @@ class FuelMap():
         # x grid
         if verbose >= 2:
             print(f'>> Store grid')
-        
+
         ni = NewFile.createVariable('X', np.float64, ('X'))
         ni.COMMENT = 'x-dimension'
         ni.GRID = np.intc(0)
@@ -1258,7 +1258,7 @@ class FuelMap():
         FuelMap.COMMENT = 'Fuel type'
         FuelMap.GRID = np.intc(4)
         FuelMap[:,:,:] = fire_array_2d_to_3d(self.fuelmaparray[0,:,:], self.nx, self.ny, self.nrefinx, self.nrefiny)
-        
+
         # Write each fuel as 3d table
         if verbose >= 2:
             print(f'>> Store properties maps')
@@ -1277,7 +1277,7 @@ class FuelMap():
             print(f'>>> Close FuelMap.nc')
 
         NewFile.close()
-        
+
         # Create 2d file
         if save2dfile:
             if verbose >= 1:
@@ -1328,7 +1328,7 @@ class FuelMap():
             # x grid
             if verbose >= 2:
                 print(f'>> Store grid')
-            
+
             ni = NewFile.createVariable('X', np.float64, ('X'))
             ni.COMMENT = 'x-dimension'
             ni.GRID = np.intc(0)
@@ -1389,7 +1389,7 @@ class FuelMap():
             FuelMap.COMMENT = 'Fuel type'
             FuelMap.GRID = np.intc(4)
             FuelMap[:,:] = self.fuelmaparray[0,:,:]
-            
+
             # Write each fuel as 3d table
             if verbose >= 2:
                 print(f'>> Store properties maps')
@@ -1474,8 +1474,8 @@ def fire_array_2d_to_3d(firearray2d, nx, ny, gammax, gammay):
     Returns
     -------
     firearray3d : numpy.ndarray
-        Reshaped 3d array 
-    """      
+        Reshaped 3d array
+    """
     farray3d = np.zeros((gammax * gammay, ny, nx))
     for m in range(1, ny*gammay + 1):
         for l in range(1, nx*gammax+1):
@@ -1511,8 +1511,8 @@ def fire_array_3d_to_2d(firearray3d, nx, ny, gammax, gammay):
     Returns
     -------
     firearray2d : numpy.ndarray
-        Reshaped 2d array 
-    """      
+        Reshaped 2d array
+    """
     farray2d = np.zeros((ny*gammay, nx*gammax))
     for k in range(1, gammax*gammay + 1):
             b = floor((k-1) / gammax) + 1
@@ -1529,6 +1529,16 @@ _ROSMODEL_NB_PROPERTIES = {
     "SANTONI2011": 22,
 }
 
+
 _ROSMODEL_FUELCLASS_REGISTER = {
     "SANTONI2011": type(BalbiFuel()).__name__,
 }
+
+
+def show_fuel_classes():
+    """Print fuel classes available in pyrolib and default parameters values
+    """
+    # Balbi
+    print(f"\n{type(BalbiFuel()).__name__} class is compliant with Balbi's ROS parameterization.")
+    print("It contains the following properties with default value:")
+    BalbiFuel().print_parameters()
