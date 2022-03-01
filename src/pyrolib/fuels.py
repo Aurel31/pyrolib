@@ -1414,14 +1414,14 @@ class FuelMap():
             NewFile.close()
 
 
-def checknjit(function):
+def njit_wrapper(function):
     if has_numba:
         return njit()(function)
     else:
         return function
 
 
-@checknjit
+@njit_wrapper
 def fill_fuel_array_from_patch(fuelarray, patchmask, propertyvector, np, nx, ny):
     """ Fill fuel array considering a mask
 
@@ -1459,7 +1459,7 @@ def fill_fuel_array_from_patch(fuelarray, patchmask, propertyvector, np, nx, ny)
     return fuelarray
 
 
-@checknjit
+@njit_wrapper
 def fire_array_2d_to_3d(firearray2d, nx, ny, gammax, gammay):
     """Reshape 2d fire array into 3d fire array readable by MesoNH
 
@@ -1496,7 +1496,7 @@ def fire_array_2d_to_3d(firearray2d, nx, ny, gammax, gammay):
     return farray3d
 
 
-@checknjit
+@njit_wrapper
 def fire_array_3d_to_2d(firearray3d, nx, ny, gammax, gammay):
     """Reshape 3d fire array readable by MesoNH to 2d fire array
 
