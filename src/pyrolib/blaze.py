@@ -125,6 +125,21 @@ def _compute_quadrant_area(phi1, phi2, phi3, phi4, nx, ny):
         SGBA
     """
     quadrant_area = np.empty((ny, nx))
+    quadrant_case_dict = {
+        68: lambda P1, P2, P3, P4: _surf68(P1, P2, P4),
+        12: lambda P1, P2, P3, P4: 1. - _surf68(P1, P2, P4),
+        70: lambda P1, P2, P3, P4: _surf70(P1, P2, P3, P4),
+        10: lambda P1, P2, P3, P4: 1. - _surf70(P1, P2, P3, P4),
+        22: lambda P1, P2, P3, P4: _surf22(P1, P3, P4),
+        42: lambda P1, P2, P3, P4: _surf22(P1, P3, P2),
+        38: lambda P1, P2, P3, P4: 1. - _surf22(P1, P3, P2),
+        50: lambda P1, P2, P3, P4: _surf70(P1, P4, P3, P2),
+        30: lambda P1, P2, P3, P4: 1. - _surf70(P1, P4, P3, P2),
+        28: lambda P1, P2, P3, P4: _surf68(P3, P2, P4),
+        52: lambda P1, P2, P3, P4: 1. - _surf68(P3, P2, P4),
+        24: lambda P1, P2, P3, P4: _surf22(P1, P3, P4) + _surf22(P1, P3, P2),
+        56: lambda P1, P2, P3, P4: _surf68(P1, P2, P4) + _surf68(P3, P2, P4),
+    }
     for j in range(1, ny-1):
         for i in range(1, nx-1):
             # phi value
@@ -150,36 +165,13 @@ def _compute_quadrant_area(phi1, phi2, phi3, phi4, nx, ny):
             D4 = int(.5 * np.sign(P1 - .5) - .5 * np.sign(P4 - 0.5))
             # Case identifier
             C = (1+D1) + 3*(1+D2) + 9*(1+D3) + 27*(1+D4)
-            # Case call
-            if C == 68:
-                quadrant_area[j, i] = _surf68(P1, P2, P4)
-            elif C == 12:
-                quadrant_area[j, i] = 1. - _surf68(P1, P2, P4)
-            elif C == 70:
-                quadrant_area[j, i] = _surf70(P1, P2, P3, P4)
-            elif C == 10:
-                quadrant_area[j, i] = 1. - _surf70(P1, P2, P3, P4)
-            elif C == 22:
-                quadrant_area[j, i] = _surf22(P1, P3, P4)
-            elif C == 42:
-                quadrant_area[j, i] = _surf22(P1, P3, P2)
-            elif C == 38:
-                quadrant_area[j, i] = 1. - _surf22(P1, P3, P2)
-            elif C == 50:
-                quadrant_area[j, i] = _surf70(P1, P4, P3, P2)
-            elif C == 30:
-                quadrant_area[j, i] = 1. - _surf70(P1, P4, P3, P2)
-            elif C == 28:
-                quadrant_area[j, i] = _surf68(P3, P2, P4)
-            elif C == 52:
-                quadrant_area[j, i] = 1. - _surf68(P3, P2, P4)
-            elif C == 24:
-                quadrant_area[j, i] = _surf22(P1, P3, P4) + _surf22(P1, P3, P2)
-            elif C == 56:
-                quadrant_area[j, i] = _surf68(P1, P2, P4) + _surf68(P3, P2, P4)
-            else:
-                print(f'default at ({i}, {j})')
-                quadrant_area[j, i] = 0.
+            # Compute burning area as function of identifier
+            try:
+                quadrant_area[j, i] = quadrant_case_dict[C](P1, P2, P3, P4)
+            except KeyError:
+                print("Error in quadrant computation: invalid identifier, check input level set field")
+                raise
+
 
     return quadrant_area
 
