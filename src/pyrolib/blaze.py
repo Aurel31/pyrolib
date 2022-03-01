@@ -4,6 +4,7 @@
 
 import numpy as np
 
+
 def SGBA_WA(phi, nx, ny):
     r"""Compute Sub-Grid Burning Area (SGBA) with Weighted Average (WA) method.
 
@@ -36,6 +37,7 @@ def SGBA_WA(phi, nx, ny):
                     + 1./64. * (phi[j-1, i-1] + phi[j-1, i+1] + phi[j+1, i-1] + phi[j+1, i+1])
 
     return S
+
 
 def SGBA_EFFR(phi, nx, ny):
     """Compute Sub-Grid Burning Area (SGBA) with Explicit Fire Front Reconstruction (EFFR) method[2]_.
@@ -75,31 +77,12 @@ def SGBA_EFFR(phi, nx, ny):
             phi_north_west[j, i] = .25 * (phi[j, i-1] + phi[j, i] + phi[j+1, i] + phi[j+1, i-1])
             phi_west[j, i]  = .5  * (phi[j, i-1] + phi[j, i])
 
-    S = 0.25 * (_compute_quadrant_area(phi_south_west,
-                               phi_south,
-                               phi, phi_west,
-                               nx,
-                               ny)
-        + _compute_quadrant_area(phi_south,
-                                 phi_south_east,
-                                 phi_east,
-                                 phi,
-                                 nx,
-                                 ny)
-        + _compute_quadrant_area(phi,
-                                 phi_east,
-                                 phi_north_east,
-                                 phi_north,
-                                 nx,
-                                 ny)
-        + _compute_quadrant_area(phi_west,
-                                 phi,
-                                 phi_north,
-                                 phi_north_west,
-                                 nx,
-                                 ny)
-    )
+    S = 0.25 * (_compute_quadrant_area(phi_south_west, phi_south, phi, phi_west, nx, ny)
+              + _compute_quadrant_area(phi_south, phi_south_east, phi_east, phi, nx, ny)
+              + _compute_quadrant_area(phi, phi_east, phi_north_east, phi_north, nx, ny)
+              + _compute_quadrant_area(phi_west, phi, phi_north, phi_north_west, nx, ny))
     return S
+
 
 def _compute_quadrant_area(phi1, phi2, phi3, phi4, nx, ny):
     """Compute surface with EFFR method
@@ -125,21 +108,6 @@ def _compute_quadrant_area(phi1, phi2, phi3, phi4, nx, ny):
         SGBA
     """
     quadrant_area = np.empty((ny, nx))
-    quadrant_case_dict = {
-        68: lambda P1, P2, P3, P4: _surf68(P1, P2, P4),
-        12: lambda P1, P2, P3, P4: 1. - _surf68(P1, P2, P4),
-        70: lambda P1, P2, P3, P4: _surf70(P1, P2, P3, P4),
-        10: lambda P1, P2, P3, P4: 1. - _surf70(P1, P2, P3, P4),
-        22: lambda P1, P2, P3, P4: _surf22(P1, P3, P4),
-        42: lambda P1, P2, P3, P4: _surf22(P1, P3, P2),
-        38: lambda P1, P2, P3, P4: 1. - _surf22(P1, P3, P2),
-        50: lambda P1, P2, P3, P4: _surf70(P1, P4, P3, P2),
-        30: lambda P1, P2, P3, P4: 1. - _surf70(P1, P4, P3, P2),
-        28: lambda P1, P2, P3, P4: _surf68(P3, P2, P4),
-        52: lambda P1, P2, P3, P4: 1. - _surf68(P3, P2, P4),
-        24: lambda P1, P2, P3, P4: _surf22(P1, P3, P4) + _surf22(P1, P3, P2),
-        56: lambda P1, P2, P3, P4: _surf68(P1, P2, P4) + _surf68(P3, P2, P4),
-    }
     for j in range(1, ny-1):
         for i in range(1, nx-1):
             # phi value
@@ -167,13 +135,14 @@ def _compute_quadrant_area(phi1, phi2, phi3, phi4, nx, ny):
             C = (1+D1) + 3*(1+D2) + 9*(1+D3) + 27*(1+D4)
             # Compute burning area as function of identifier
             try:
-                quadrant_area[j, i] = quadrant_case_dict[C](P1, P2, P3, P4)
+                quadrant_area[j, i] = QUADRANT_CASE_DICT[C](P1, P2, P3, P4)
             except KeyError:
                 print("Error in quadrant computation: invalid identifier, check input level set field")
                 raise
 
 
     return quadrant_area
+
 
 def _surf68(phi1, phi2, phi4):
     """Compute area of a south east fire triangle
@@ -193,6 +162,7 @@ def _surf68(phi1, phi2, phi4):
         SGBA
     """
     return np.power(.5-phi1, 2) / (2. * (phi2-phi1) * (phi4-phi1))
+
 
 def _surf70(phi1, phi2, phi3, phi4):
     """Compute area of a south fire trapeze
@@ -215,6 +185,7 @@ def _surf70(phi1, phi2, phi3, phi4):
     """
     return .5 * ((.5-phi1) / (phi4-phi1) + (.5-phi2) / (phi3-phi2))
 
+
 def _surf22(phi1, phi3, phi4):
     """Compute area of a north east fire triangle
 
@@ -233,3 +204,20 @@ def _surf22(phi1, phi3, phi4):
         SGBA
     """
     return np.power(phi4-.5, 2) / (-2 * (phi4-phi1) * (phi3-phi4))
+
+
+QUADRANT_CASE_DICT = {
+    68: lambda P1, P2, P3, P4: _surf68(P1, P2, P4),
+    12: lambda P1, P2, P3, P4: 1. - _surf68(P1, P2, P4),
+    70: lambda P1, P2, P3, P4: _surf70(P1, P2, P3, P4),
+    10: lambda P1, P2, P3, P4: 1. - _surf70(P1, P2, P3, P4),
+    22: lambda P1, P2, P3, P4: _surf22(P1, P3, P4),
+    42: lambda P1, P2, P3, P4: _surf22(P1, P3, P2),
+    38: lambda P1, P2, P3, P4: 1. - _surf22(P1, P3, P2),
+    50: lambda P1, P2, P3, P4: _surf70(P1, P4, P3, P2),
+    30: lambda P1, P2, P3, P4: 1. - _surf70(P1, P4, P3, P2),
+    28: lambda P1, P2, P3, P4: _surf68(P3, P2, P4),
+    52: lambda P1, P2, P3, P4: 1. - _surf68(P3, P2, P4),
+    24: lambda P1, P2, P3, P4: _surf22(P1, P3, P4) + _surf22(P1, P3, P2),
+    56: lambda P1, P2, P3, P4: _surf68(P1, P2, P4) + _surf68(P3, P2, P4),
+}

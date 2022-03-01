@@ -11,6 +11,7 @@ _DataFileName = 'tc_data_1hz_3.dat'
 
 FireFluxDataPath = 'FireFlux_Raw'
 
+
 def set_data_path(path):
     """Set path to FireFlux I data directory.
 
@@ -48,6 +49,7 @@ def set_data_path(path):
     """
     global FireFluxDataPath
     FireFluxDataPath = path
+
 
 def datetime2seconds(listofdate, startingdatetime):
     """Convert a list of datetime to seconds from a strating datetime

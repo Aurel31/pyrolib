@@ -1420,6 +1420,7 @@ def checknjit(function):
     else:
         return function
 
+
 @checknjit
 def fill_fuel_array_from_patch(fuelarray, patchmask, propertyvector, np, nx, ny):
     """ Fill fuel array considering a mask
