@@ -133,3 +133,5 @@ FuelMap.nc
 FuelMap2d.nc
 FuelMap.des
 scenario.yml
+
+.DS_Store
