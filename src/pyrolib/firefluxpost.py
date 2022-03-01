@@ -99,7 +99,7 @@ class SonicTower():
 
     >>> import pyrolib.firefluxpost as ffp
     >>> from datetime import datetime
-    >>> 
+    >>>
     >>> # set FireFlux I data path
     >>> ffp.set_data_path('/home/user/data/FireFlux_Raw')
     >>> # extract 2m small tower data from file
@@ -121,7 +121,7 @@ class SonicTower():
             self.file = f'Pfit_MT{self.height:d}m_FEB23_H12-13_1s.dat'
         elif tower == 'small':
             self.file = f'Pfit_ST{self.height:d}m_FEB23_H12-13_1s.dat'.format()
-    
+
     def get_wind_and_temp(self):
         """ Import wind data and sonic temperature from data files.
         """
@@ -142,7 +142,7 @@ class SonicTower():
 
             if self.height == 2:
                 self.Tcfine = np.zeros(NbofRow)
-                for i,row in enumerate(reader):
+                for i, row in enumerate(reader):
                     row = list(filter(None, row))
                     self.time.append(datetime(2006, 2, 23, int(row[3]), int(row[4]), int(row[5]) - 1))
                     counter[i] = float(row[6])
@@ -154,13 +154,13 @@ class SonicTower():
             else:
                 for i, row in enumerate(reader):
                     row = list(filter(None, row))
-                    self.time.append(datetime(2006, 2, 23, int(row[3]), int(row[4]) ,int(row[5]) - 1))
+                    self.time.append(datetime(2006, 2, 23, int(row[3]), int(row[4]), int(row[5]) - 1))
                     counter[i] = float(row[6])
                     self.U[i] = float(row[8])
                     self.V[i] = -float(row[7])
                     self.W[i] = float(row[9])
                     self.Ts[i] = float(row[10])
-    
+
     def set_fail_sensor(self, timevector, failtime, endoffailtime=None):
         """ Set nan into TcFine temperature for failed sensor since failtime to endoffailtime (default infinity)
 
@@ -201,10 +201,10 @@ class MainTowerTc():
 
     >>> import pyrolib.firefluxpost as ffp
     >>> import statsmodels.api as sm
-    >>> 
+    >>>
     >>> # set FireFlux I data path
     >>> ffp.set_data_path('/home/user/data/FireFlux_Raw')
-    >>> # extract main tower data from file 
+    >>> # extract main tower data from file
     >>> ffp.MTtc.getdata()
     >>> # use HP filter (1600 as filtering constant)
     >>> _, filteredsignal = sm.tsa.filters.hpfilter(ffdp.MTtc.Tc['02.00'].data, 1600)
@@ -215,7 +215,7 @@ class MainTowerTc():
         for h in _MTHeight:
             self.Tc.update({f'{h:05.2f}': _TcData(height=h)})
         self.time = []
-    
+
     def getdata(self):
         """ Get data in file _DataFileName
 

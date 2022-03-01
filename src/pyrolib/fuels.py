@@ -163,7 +163,7 @@ class BaseFuel(ABC):
         # Create dictionary of parameters
         DictofParam = {}
         for col in sequence.columns:
-            DictofParam[col] = sequence.at[index,col]
+            DictofParam[col] = sequence.at[index, col]
 
         return self.copy(**DictofParam)
 
@@ -172,7 +172,8 @@ class BaseFuel(ABC):
 
         The minimal dictionnay contains the class name (key: class) and
         the dictionnary of minimal dictionnaries of each :class:`~pyrolib.fuels.FuelProperty` attributes (key: properties).
-        If `compact` is `True` then the dictionnary of :class:`~pyrolib.fuels.FuelProperty` attributes `value` are stored instead
+        If `compact` is `True` then the dictionnary of :class:`~pyrolib.fuels.FuelProperty` attributes `value`
+        are stored instead
         of minimal dicctionnaries.
 
         Parameters
@@ -329,8 +330,8 @@ class BalbiFuel(BaseFuel):
         self.X0     = FuelProperty(name='X0',      value=0.3,      unit='-',            description='Fraction of radiant energy',   propertyindex=19)
         self.LAI    = FuelProperty(name='LAI',     value=4.,       unit='-',            description='Leaf area index',              propertyindex=20)
         self.r00    = FuelProperty(name='r00',     value=2e-5,     unit='-',            description='Model constant',               propertyindex=21)
-        self.wind   = FuelProperty(name='wind',    value=0.,       unit='m/s',          description='Wind at mid-flame'                             )
-        self.slope  = FuelProperty(name='slope',   value=0.,       unit='deg',          description='Slope'                                         )
+        self.wind   = FuelProperty(name='wind',    value=0.,       unit='m/s',          description='Wind at mid-flame')
+        self.slope  = FuelProperty(name='slope',   value=0.,       unit='deg',          description='Slope')
 
         # Modify from default
         self._modify_parameter_value(**opts)
@@ -404,7 +405,7 @@ class BalbiFuel(BaseFuel):
         A = nu * A0  * (1.-xsi) / (1. + a * self.Md.value)
         # nominal radiant temperature
         T = self.Ta.value + (self.DeltaH.value * (1 - self.X0.value) * (1.-xsi) / (self.cpa.value * (1. + self.stoch.value)))
-        R00 = B * pow(T,4) / (self.cp.value * (self.Ti.value - self.Ta.value))
+        R00 = B * pow(T, 4) / (self.cp.value * (self.Ti.value - self.Ta.value))
         V00 = 2. * self.LAI.value * (1. + self.stoch.value) * T * self.rhod.value / (self.rhoa.value * self.Ta.value * self.tau0.value)
         v0 = nu * V00
         gamma = radians(self.slope.value) + atan(self.wind.value / v0)
@@ -541,7 +542,7 @@ class Scenario():
             minimal_dict_of_fuels[fuel] = self.fuels[fuel].minimal_dict(compact=compact)
         #
         with open(fname, 'w') as ymlfile:
-            yaml.dump({'Name':self.name}, ymlfile)
+            yaml.dump({'Name': self.name}, ymlfile)
             yaml.dump({'LongName': self.longname}, ymlfile)
             yaml.dump({'Infos': self.infos}, ymlfile)
             yaml.dump({'isCompact': compact}, ymlfile)
@@ -736,12 +737,12 @@ class RectanglePatch(DataPatch):
         for i in range(self.nxf):
             for j in range(self.nyf):
                 # get x limit
-                    if xfiremesh[i] +.5*XFIREMESHSIZE[0] > self.xpos[0] and\
-                       xfiremesh[i] -.5*XFIREMESHSIZE[0] < self.xpos[1]:
+                    if xfiremesh[i] + .5*XFIREMESHSIZE[0] > self.xpos[0] and\
+                       xfiremesh[i] - .5*XFIREMESHSIZE[0] < self.xpos[1]:
                         # get y limit
                         if yfiremesh[j] + .5*XFIREMESHSIZE[1] > self.ypos[0] and\
                            yfiremesh[j] - .5*XFIREMESHSIZE[1] < self.ypos[1]:
-                            self.datamask[j,i] = 1
+                            self.datamask[j, i] = 1
 
 
 class LinePatch(DataPatch):
@@ -1243,7 +1244,7 @@ class FuelMap():
         IgnitionNC.COMMENT = 'Ignition map'
         IgnitionNC.GRID = np.intc(4)
         IgnitionNC.standard_name = 'Ignition'
-        IgnitionNC[:,:,:] = fire_array_2d_to_3d(self.ignitionmaparray, self.nx, self.ny, self.nrefinx, self.nrefiny)
+        IgnitionNC[:, :, :] = fire_array_2d_to_3d(self.ignitionmaparray, self.nx, self.ny, self.nrefinx, self.nrefiny)
 
         # walking ignition map
         if verbose >= 2:
@@ -1252,15 +1253,15 @@ class FuelMap():
         IgnitionNC.COMMENT = 'WalkingIgnition map'
         IgnitionNC.GRID = np.intc(4)
         IgnitionNC.standard_name = 'WalkingIgnition'
-        IgnitionNC[:,:,:] = fire_array_2d_to_3d(self.walkingignitionmaparray, self.nx, self.ny, self.nrefinx, self.nrefiny)
+        IgnitionNC[:, :, :] = fire_array_2d_to_3d(self.walkingignitionmaparray, self.nx, self.ny, self.nrefinx, self.nrefiny)
 
         # fuel type map
         if verbose >= 2:
             print(f'>> Store fuel type map')
-        FuelMap = NewFile.createVariable('Fuel01', np.float64, ('F','Y','X'))
+        FuelMap = NewFile.createVariable('Fuel01', np.float64, ('F', 'Y', 'X'))
         FuelMap.COMMENT = 'Fuel type'
         FuelMap.GRID = np.intc(4)
-        FuelMap[:,:,:] = fire_array_2d_to_3d(self.fuelmaparray[0,:,:], self.nx, self.ny, self.nrefinx, self.nrefiny)
+        FuelMap[:, :, :] = fire_array_2d_to_3d(self.fuelmaparray[0, :, :], self.nx, self.ny, self.nrefinx, self.nrefiny)
 
         # Write each fuel as 3d table
         if verbose >= 2:
@@ -1269,12 +1270,12 @@ class FuelMap():
         for propertyname in vars(self.scenario.fuels[BaseFuelname]):
             propertyobj = getattr(self.scenario.fuels[BaseFuelname], propertyname)
             if propertyobj.propertyindex is not None:
-                FuelMap = NewFile.createVariable(f'Fuel{propertyobj.propertyindex + 1:02d}', np.float64, ('F','Y','X'))
+                FuelMap = NewFile.createVariable(f'Fuel{propertyobj.propertyindex + 1:02d}', np.float64, ('F', 'Y', 'X'))
                 FuelMap.standard_name = propertyobj.name
                 FuelMap.COMMENT = propertyobj.description
                 FuelMap.units = propertyobj.unit
                 FuelMap.GRID = np.intc(4)
-                FuelMap[:,:,:] = fire_array_2d_to_3d(self.fuelmaparray[propertyobj.propertyindex,:,:], self.nx, self.ny, self.nrefinx, self.nrefiny)
+                FuelMap[:, :, :] = fire_array_2d_to_3d(self.fuelmaparray[propertyobj.propertyindex, :, :], self.nx, self.ny, self.nrefinx, self.nrefiny)
 
         if verbose >= 1:
             print(f'>>> Close FuelMap.nc')
@@ -1374,7 +1375,7 @@ class FuelMap():
             IgnitionNC.COMMENT = 'Ignition map'
             IgnitionNC.GRID = np.intc(4)
             IgnitionNC.standard_name = 'Ignition'
-            IgnitionNC[:,:] = self.ignitionmaparray
+            IgnitionNC[:, :] = self.ignitionmaparray
 
             # walking ignition map
             if verbose >= 2:
@@ -1383,7 +1384,7 @@ class FuelMap():
             IgnitionNC.COMMENT = 'WalkingIgnition map'
             IgnitionNC.GRID = np.intc(4)
             IgnitionNC.standard_name = 'WalkingIgnition'
-            IgnitionNC[:,:] = self.walkingignitionmaparray
+            IgnitionNC[:, :] = self.walkingignitionmaparray
 
             # fuel type map
             if verbose >= 2:
@@ -1391,7 +1392,7 @@ class FuelMap():
             FuelMap = NewFile.createVariable('Fuel01', np.float64, ('YFIRE', 'XFIRE'))
             FuelMap.COMMENT = 'Fuel type'
             FuelMap.GRID = np.intc(4)
-            FuelMap[:,:] = self.fuelmaparray[0,:,:]
+            FuelMap[:, :] = self.fuelmaparray[0, :, :]
 
             # Write each fuel as 3d table
             if verbose >= 2:
@@ -1405,7 +1406,7 @@ class FuelMap():
                     FuelMap.COMMENT = propertyobj.description
                     FuelMap.UNITS = propertyobj.unit
                     FuelMap.GRID = np.intc(4)
-                    FuelMap[:,:] = self.fuelmaparray[propertyobj.propertyindex,:,:]
+                    FuelMap[:, :] = self.fuelmaparray[propertyobj.propertyindex, :, :]
 
             if verbose >= 1:
                 print(f'>>> Close FuelMap2d.nc')
@@ -1452,8 +1453,8 @@ def fill_fuel_array_from_patch(fuelarray, patchmask, propertyvector, np, nx, ny)
             # x axis loop
             for i in range(nx):
                 # check mask value
-                if patchmask[j,i] == 1:
-                    fuelarray[k,j,i] = propertyvector[k]
+                if patchmask[j, i] == 1:
+                    fuelarray[k, j, i] = propertyvector[k]
     return fuelarray
 
 
@@ -1490,7 +1491,7 @@ def fire_array_2d_to_3d(firearray2d, nx, ny, gammax, gammay):
             k = (b-1) * gammax + a
 
             # fill tables
-            farray3d[k-1,j-1,i-1] = firearray2d[m-1,l-1]
+            farray3d[k-1, j-1, i-1] = firearray2d[m-1, l-1]
     return farray3d
 
 
@@ -1524,7 +1525,7 @@ def fire_array_3d_to_2d(firearray3d, nx, ny, gammax, gammay):
                 m = (j-1) * gammay + b
                 for i in range(1, nx + 1):
                     l = (i - 1) * gammax + a
-                    farray2d[m-1,l-1] = firearray3d[k-1, j-1, i-1]
+                    farray2d[m-1, l-1] = firearray3d[k-1, j-1, i-1]
     return farray2d
 
 
