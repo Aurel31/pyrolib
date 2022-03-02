@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Post-processing of FireFlux I raw data
 """
 
@@ -7,9 +6,9 @@ import csv
 import numpy as np
 
 _MTHeight = [0.1, 0.5, 0.75, 2, 4.5, 10, 15, 20, 25, 28, 30, 35, 43, 0.13, 1.47, 2.1]
-_DataFileName = 'tc_data_1hz_3.dat'
+_DataFileName = "tc_data_1hz_3.dat"
 
-FireFluxDataPath = 'FireFlux_Raw'
+FireFluxDataPath = "FireFlux_Raw"
 
 
 def set_data_path(path):
@@ -72,8 +71,9 @@ def datetime2seconds(listofdate, startingdatetime):
         SpanSec[i] = Span.total_seconds()
     return SpanSec
 
-class SonicTower():
-    """ Sonic anemometer data extraction class
+
+class SonicTower:
+    """Sonic anemometer data extraction class
 
     Extraction of Main Tower (MT) and Small Tower (ST) data.
 
@@ -110,6 +110,7 @@ class SonicTower():
     >>> ffp.ST2.set_fail_sensor(ffp.datetime2seconds(ffp.ST2.time, datetime(2006, 2, 23, 12, 46, 44)), 455)
 
     """
+
     def __init__(self, height, tower):
         self.height = height
         self.tower = tower
@@ -119,15 +120,14 @@ class SonicTower():
         self.Ts = None
         self.time = None
         self.Tcfine = None
-        if tower == 'main':
-            self.file = f'Pfit_MT{self.height:d}m_FEB23_H12-13_1s.dat'
-        elif tower == 'small':
-            self.file = f'Pfit_ST{self.height:d}m_FEB23_H12-13_1s.dat'.format()
+        if tower == "main":
+            self.file = f"Pfit_MT{self.height:d}m_FEB23_H12-13_1s.dat"
+        elif tower == "small":
+            self.file = f"Pfit_ST{self.height:d}m_FEB23_H12-13_1s.dat".format()
 
     def get_wind_and_temp(self):
-        """ Import wind data and sonic temperature from data files.
-        """
-        with open(f'{FireFluxDataPath:s}/{self.file:s}', 'r') as f:
+        """Import wind data and sonic temperature from data files."""
+        with open(f"{FireFluxDataPath:s}/{self.file:s}", "r") as f:
             reader = csv.reader(f, delimiter=" ")
             NbofRow = sum(1 for row in reader)
             f.seek(0)
@@ -137,7 +137,7 @@ class SonicTower():
             self.V = np.zeros(NbofRow)
             self.W = np.zeros(NbofRow)
             self.Ts = np.zeros(NbofRow)
-            if self.tower == 'main':
+            if self.tower == "main":
                 coltc = 11
             else:
                 coltc = 12
@@ -164,7 +164,7 @@ class SonicTower():
                     self.Ts[i] = float(row[10])
 
     def set_fail_sensor(self, timevector, failtime, endoffailtime=None):
-        """ Set nan into TcFine temperature for failed sensor since failtime to endoffailtime (default infinity)
+        """Set nan into TcFine temperature for failed sensor since failtime to endoffailtime (default infinity)
 
         Parameters
         ----------
@@ -179,16 +179,18 @@ class SonicTower():
             self.Tcfine[timevector >= failtime and timevector <= endoffailtime] = np.nan
 
 
-class _TcData():
+class _TcData:
     """
     Default class for data storage
     """
+
     def __init__(self, height):
         self.height = height
         self.data = None
 
-class MainTowerTc():
-    """ Type T thermocouples data extraction class
+
+class MainTowerTc:
+    """Type T thermocouples data extraction class
 
     Extraction of Main Tower (MT) type T thermocouples data.
 
@@ -212,18 +214,19 @@ class MainTowerTc():
     >>> _, filteredsignal = sm.tsa.filters.hpfilter(ffdp.MTtc.Tc['02.00'].data, 1600)
 
     """
+
     def __init__(self):
-        self.Tc = {'ref': _TcData(height=-1)}
+        self.Tc = {"ref": _TcData(height=-1)}
         for h in _MTHeight:
-            self.Tc.update({f'{h:05.2f}': _TcData(height=h)})
+            self.Tc.update({f"{h:05.2f}": _TcData(height=h)})
         self.time = []
 
     def getdata(self):
-        """ Get data in file _DataFileName
+        """Get data in file _DataFileName
 
         The file contains type T Thermocouple data for each height for Main Tower
         """
-        with open(f'{FireFluxDataPath:s}/{_DataFileName:s}', 'r') as f:
+        with open(f"{FireFluxDataPath:s}/{_DataFileName:s}", "r") as f:
             reader = csv.reader(f, delimiter=" ")
             next(f)
             # Count lines in file for memory allocation of data vectors
@@ -240,17 +243,18 @@ class MainTowerTc():
                 row = list(filter(None, row))
                 self.time.append(referenceDate + timedelta(seconds=int(row[0]) - 1))
                 # get ref data
-                self.Tc['ref'].data[i] = row[1]
+                self.Tc["ref"].data[i] = row[1]
                 # for each height, get data at line i
                 for j, h in enumerate(_MTHeight):
-                    self.Tc[f'{h:05.2f}'].data[i] = row[j+2]
+                    self.Tc[f"{h:05.2f}"].data[i] = row[j + 2]
+
 
 # base class objects
-MT2 = SonicTower(height=2, tower='main')
-MT10 = SonicTower(height=10, tower='main')
-MT28 = SonicTower(height=28, tower='main')
-MT42 = SonicTower(height=42, tower='main')
-ST2 = SonicTower(height=2, tower='small')
-ST10 = SonicTower(height=10, tower='small')
+MT2 = SonicTower(height=2, tower="main")
+MT10 = SonicTower(height=10, tower="main")
+MT28 = SonicTower(height=28, tower="main")
+MT42 = SonicTower(height=42, tower="main")
+ST2 = SonicTower(height=2, tower="small")
+ST10 = SonicTower(height=10, tower="small")
 
 MTtc = MainTowerTc()
