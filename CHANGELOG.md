@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] 2022 / 03 / 02
+
+### Added
+- Create FuelMap from another directory = specify workdir.
+- test for fuelmap generation
+
+### Changed
+- Improve quandrant case identifier handling
+- use int instead of deprecated np.int
+- use black to improuve lint score
+
 ## [0.1.1] 2022 / 02 / 28
 
 ### Added
