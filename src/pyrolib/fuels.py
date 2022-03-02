@@ -871,10 +871,11 @@ class FuelMap():
 
 
     """
-    def __init__(self, scenario: Scenario, namelistname='EXSEG1.nam', MesoNHversion: str = '5.5.0'):
+    def __init__(self, scenario: Scenario, namelistname='EXSEG1.nam', MesoNHversion: str = '5.5.0', workdir: str = ""):
         self.scenario = scenario
         self.namelist = namelistname
         self.mnh_version = MesoNHversion
+        self.workdir = workdir
 
         # Read default values for MNHBLAZE namelist from Default_MNH_namelist.yml
         # Values should be compliant with default_desfmn.f90
@@ -907,7 +908,10 @@ class FuelMap():
     def __get_info_from_namelist(self):
         """ Retrieve informations on the MesoNH-Blaze run from namelist and initialization file
         """
-        projectpath = os.getcwd()
+        if self.workdir == "":
+            projectpath = os.getcwd()
+        else:
+            projectpath = self.workdir
         # Check if Namelist exists
         if not os.path.exists(f'{projectpath:s}/{self.namelist:s}'):
             raise IOError(f'File {self.namelist:s} not found')
@@ -1157,7 +1161,10 @@ class FuelMap():
         verbose : int, optional
             verbose level (0: no prints, 1: low verbosity, 2: high verbosity) (default: 0)
         """
-        projectpath = os.getcwd()
+        if self.workdir == "":
+            projectpath = os.getcwd()
+        else:
+            projectpath = self.workdir
 
         # copy .des file
         copy2(f'{projectpath:s}/{self.mnhinifile:s}.des', f'{projectpath:s}/FuelMap.des')
@@ -1183,7 +1190,7 @@ class FuelMap():
         NewFile.createDimension('size3', 3)
         NewFile.createDimension('char16', 16)
 
-        MNHversion = np.array(self.mnh_version.split('.'), dtype=np.int)
+        MNHversion = np.array(self.mnh_version.split('.'), dtype=int)
         varia = NewFile.createVariable('MNHVERSION', int, ('size3'), fill_value=-2147483647)
         varia.long_name = 'MesoNH version'
         varia.valid_min = np.intc(-2147483646)
@@ -1305,7 +1312,7 @@ class FuelMap():
             NewFile.createDimension('size3', 3)
             NewFile.createDimension('char16', 16)
 
-            MNHversion = np.array(self.mnh_version.split('.'), dtype=np.int)
+            MNHversion = np.array(self.mnh_version.split('.'), dtype=int)
             varia = NewFile.createVariable('MNHVERSION', int, ('size3'), fill_value=-2147483647)
             varia.long_name = 'MesoNH version'
             varia.valid_min = np.intc(-2147483646)
