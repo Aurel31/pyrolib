@@ -15,9 +15,11 @@ def test_simple_case_ff():
     fuelmap.addRectanglePatch(xpos=[100, 150], ypos=[50, 150], unburnable=True)
     fuelmap.addLinePatch([200, 200], [300, 350], walkingignitiontimes=[0, 100])
 
-    fuelmap.write(save2dfile=True)
+    fuelmap.dump_mesonh()
     assert os.path.exists(f"{os.getcwd()}/examples/FuelMap.nc")
     assert os.path.exists(f"{os.getcwd()}/examples/FuelMap.des")
+
+    fuelmap.dump()
     assert os.path.exists(f"{os.getcwd()}/examples/FuelMap2d.nc")
     os.remove(f"{os.getcwd()}/examples/FuelMap.nc")
     os.remove(f"{os.getcwd()}/examples/FuelMap.des")

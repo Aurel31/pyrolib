@@ -1199,14 +1199,12 @@ class FuelMap:
             return
         print("WARNING: No information given on what to do. Nothing done")
 
-    def write(self, save2dfile: bool = False, verbose: int = 0):
-        """Write Fuel map as netCFD file named FuelMap.nc
+    def dump_mesonh(self, verbose: int = 0):
+        """Write Fuel map as netCFD file named FuelMap.nc for Méso-NH
 
         Parameters
         ----------
 
-        save2dfile : bool, optional
-            Flag to save 2d version of FuelMap (easier to check fuelmap construction) (default: False)
         verbose : int, optional
             verbose level (0: no prints, 1: low verbosity, 2: high verbosity) (default: 0)
         """
@@ -1340,138 +1338,150 @@ class FuelMap:
 
         NewFile.close()
 
-        # Create 2d file
-        if save2dfile:
-            if verbose >= 1:
-                print(f">>> Create FuelMap2d.nc")
+    def dump(self, verbose: int = 0):
+        """Write 2D Fuel map as netCFD file named FuelMap2d.nc
 
-            NewFile = Dataset(f"{projectpath:s}/FuelMap2d.nc", "w")
+        Parameters
+        ----------
 
-            if verbose >= 2:
-                print(f">> Store MesoNH file info")
+        verbose : int, optional
+            verbose level (0: no prints, 1: low verbosity, 2: high verbosity) (default: 0)
+        """
+        if self.workdir == "":
+            projectpath = os.getcwd()
+        else:
+            projectpath = self.workdir
 
-            # need to be compliant with MesoNH output files nomenclature
-            NewFile.Conventions = "CF-1.7 COMODO-1.4"
-            NewFile.MNH_REAL = "8"
-            NewFile.MNH_INT = "4"
-            NewFile.MNH_cleanly_closed = "yes"
+        if verbose >= 1:
+            print(f">>> Create FuelMap2d.nc")
 
-            NewFile.createDimension("X", self.nx)
-            NewFile.createDimension("Y", self.ny)
-            NewFile.createDimension("XFIRE", self.nx * self.nrefinx)
-            NewFile.createDimension("YFIRE", self.ny * self.nrefiny)
-            NewFile.createDimension("size3", 3)
-            NewFile.createDimension("char16", 16)
+        NewFile = Dataset(f"{projectpath:s}/FuelMap2d.nc", "w")
 
-            MNHversion = np.array(self.mnh_version.split("."), dtype=int)
-            varia = NewFile.createVariable("MNHVERSION", int, ("size3"), fill_value=-2147483647)
-            varia.long_name = "MesoNH version"
-            varia.valid_min = np.intc(-2147483646)
-            varia.valid_max = np.intc(2147483647)
-            varia[:] = MNHversion
+        if verbose >= 2:
+            print(f">> Store MesoNH file info")
 
-            varia = NewFile.createVariable("MASDEV", int, ())
-            varia.long_name = "MesoNH version (without bugfix)"
-            varia = MNHversion[0]
+        # need to be compliant with MesoNH output files nomenclature
+        NewFile.Conventions = "CF-1.7 COMODO-1.4"
+        NewFile.MNH_REAL = "8"
+        NewFile.MNH_INT = "4"
+        NewFile.MNH_cleanly_closed = "yes"
 
-            varia = NewFile.createVariable("BUGFIX", int, ())
-            varia.long_name = "MesoNH bugfix number"
-            varia = MNHversion[1]
+        NewFile.createDimension("X", self.nx)
+        NewFile.createDimension("Y", self.ny)
+        NewFile.createDimension("XFIRE", self.nx * self.nrefinx)
+        NewFile.createDimension("YFIRE", self.ny * self.nrefiny)
+        NewFile.createDimension("size3", 3)
+        NewFile.createDimension("char16", 16)
 
-            varia = NewFile.createVariable("STORAGE_TYPE", "c", ("char16"))
-            varia.long_name = "STORAGE_TYPE"
-            varia.comment = "Storage type for the information written in the FM files"
-            varia[:] = "TT              "
+        MNHversion = np.array(self.mnh_version.split("."), dtype=int)
+        varia = NewFile.createVariable("MNHVERSION", int, ("size3"), fill_value=-2147483647)
+        varia.long_name = "MesoNH version"
+        varia.valid_min = np.intc(-2147483646)
+        varia.valid_max = np.intc(2147483647)
+        varia[:] = MNHversion
 
-            varia = NewFile.createVariable("FILETYPE", "c", ("char16"))
-            varia.long_name = "type of this file"
-            varia[:] = "BlazeData       "
+        varia = NewFile.createVariable("MASDEV", int, ())
+        varia.long_name = "MesoNH version (without bugfix)"
+        varia = MNHversion[0]
 
-            # x grid
-            if verbose >= 2:
-                print(f">> Store grid")
+        varia = NewFile.createVariable("BUGFIX", int, ())
+        varia.long_name = "MesoNH bugfix number"
+        varia = MNHversion[1]
 
-            ni = NewFile.createVariable("X", np.float64, ("X"))
-            ni.COMMENT = "x-dimension"
-            ni.GRID = np.intc(0)
-            ni.standard_name = "x coordinates"
-            ni.units = "m"
-            ni.axis = "X"
-            ni[:] = self.xhat
+        varia = NewFile.createVariable("STORAGE_TYPE", "c", ("char16"))
+        varia.long_name = "STORAGE_TYPE"
+        varia.comment = "Storage type for the information written in the FM files"
+        varia[:] = "TT              "
 
-            # y grid
-            nj = NewFile.createVariable("Y", np.float64, ("Y"))
-            nj.COMMENT = "y-dimension"
-            nj.GRID = np.intc(0)
-            nj.standard_name = "y coordinates"
-            nj.units = "m"
-            nj.axis = "Y"
-            nj[:] = self.yhat
+        varia = NewFile.createVariable("FILETYPE", "c", ("char16"))
+        varia.long_name = "type of this file"
+        varia[:] = "BlazeData       "
 
-            # fire grid
-            firegrid = NewFile.createVariable("XFIRE", np.float64, ("XFIRE"))
-            firegrid.COMMENT = "x-fire-dimension"
-            firegrid.GRID = np.intc(0)
-            firegrid.standard_name = "x Fire dimension"
-            firegrid.axis = "X"
-            firegrid.unit = "m"
-            firegrid[:] = self.xfiremesh
+        # x grid
+        if verbose >= 2:
+            print(f">> Store grid")
 
-            firegrid = NewFile.createVariable("YFIRE", np.float64, ("YFIRE"))
-            firegrid.COMMENT = "y-fire-dimension"
-            firegrid.GRID = np.intc(0)
-            firegrid.standard_name = "y Fire dimension"
-            firegrid.axis = "Y"
-            firegrid.unit = "m"
-            firegrid[:] = self.yfiremesh
+        ni = NewFile.createVariable("X", np.float64, ("X"))
+        ni.COMMENT = "x-dimension"
+        ni.GRID = np.intc(0)
+        ni.standard_name = "x coordinates"
+        ni.units = "m"
+        ni.axis = "X"
+        ni[:] = self.xhat
 
-            # ignition map
-            if verbose >= 2:
-                print(f">> Store ignition map")
+        # y grid
+        nj = NewFile.createVariable("Y", np.float64, ("Y"))
+        nj.COMMENT = "y-dimension"
+        nj.GRID = np.intc(0)
+        nj.standard_name = "y coordinates"
+        nj.units = "m"
+        nj.axis = "Y"
+        nj[:] = self.yhat
 
-            IgnitionNC = NewFile.createVariable("Ignition", np.float64, ("YFIRE", "XFIRE"))
-            IgnitionNC.COMMENT = "Ignition map"
-            IgnitionNC.GRID = np.intc(4)
-            IgnitionNC.standard_name = "Ignition"
-            IgnitionNC[:, :] = self.ignitionmaparray
+        # fire grid
+        firegrid = NewFile.createVariable("XFIRE", np.float64, ("XFIRE"))
+        firegrid.COMMENT = "x-fire-dimension"
+        firegrid.GRID = np.intc(0)
+        firegrid.standard_name = "x Fire dimension"
+        firegrid.axis = "X"
+        firegrid.unit = "m"
+        firegrid[:] = self.xfiremesh
 
-            # walking ignition map
-            if verbose >= 2:
-                print(f">> Store walking ignition map")
-            IgnitionNC = NewFile.createVariable("WalkingIgnition", np.float64, ("YFIRE", "XFIRE"))
-            IgnitionNC.COMMENT = "WalkingIgnition map"
-            IgnitionNC.GRID = np.intc(4)
-            IgnitionNC.standard_name = "WalkingIgnition"
-            IgnitionNC[:, :] = self.walkingignitionmaparray
+        firegrid = NewFile.createVariable("YFIRE", np.float64, ("YFIRE"))
+        firegrid.COMMENT = "y-fire-dimension"
+        firegrid.GRID = np.intc(0)
+        firegrid.standard_name = "y Fire dimension"
+        firegrid.axis = "Y"
+        firegrid.unit = "m"
+        firegrid[:] = self.yfiremesh
 
-            # fuel type map
-            if verbose >= 2:
-                print(f">> Store fuel type map")
-            FuelMap = NewFile.createVariable("Fuel01", np.float64, ("YFIRE", "XFIRE"))
-            FuelMap.COMMENT = "Fuel type"
-            FuelMap.GRID = np.intc(4)
-            FuelMap[:, :] = self.fuelmaparray[0, :, :]
+        # ignition map
+        if verbose >= 2:
+            print(f">> Store ignition map")
 
-            # Write each fuel as 3d table
-            if verbose >= 2:
-                print(f">> Store properties maps")
-            basefuelname = f"{_ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]}1"
-            for propertyname in vars(self.scenario.fuels[basefuelname]):
-                propertyobj = getattr(self.scenario.fuels[basefuelname], propertyname)
-                if propertyobj.propertyindex is not None:
-                    FuelMap = NewFile.createVariable(
-                        f"Fuel{propertyobj.propertyindex + 1:02d}", np.float64, ("YFIRE", "XFIRE")
-                    )
-                    FuelMap.standard_name = propertyobj.name
-                    FuelMap.COMMENT = propertyobj.description
-                    FuelMap.UNITS = propertyobj.unit
-                    FuelMap.GRID = np.intc(4)
-                    FuelMap[:, :] = self.fuelmaparray[propertyobj.propertyindex, :, :]
+        IgnitionNC = NewFile.createVariable("Ignition", np.float64, ("YFIRE", "XFIRE"))
+        IgnitionNC.COMMENT = "Ignition map"
+        IgnitionNC.GRID = np.intc(4)
+        IgnitionNC.standard_name = "Ignition"
+        IgnitionNC[:, :] = self.ignitionmaparray
 
-            if verbose >= 1:
-                print(f">>> Close FuelMap2d.nc")
+        # walking ignition map
+        if verbose >= 2:
+            print(f">> Store walking ignition map")
+        IgnitionNC = NewFile.createVariable("WalkingIgnition", np.float64, ("YFIRE", "XFIRE"))
+        IgnitionNC.COMMENT = "WalkingIgnition map"
+        IgnitionNC.GRID = np.intc(4)
+        IgnitionNC.standard_name = "WalkingIgnition"
+        IgnitionNC[:, :] = self.walkingignitionmaparray
 
-            NewFile.close()
+        # fuel type map
+        if verbose >= 2:
+            print(f">> Store fuel type map")
+        FuelMap = NewFile.createVariable("Fuel01", np.float64, ("YFIRE", "XFIRE"))
+        FuelMap.COMMENT = "Fuel type"
+        FuelMap.GRID = np.intc(4)
+        FuelMap[:, :] = self.fuelmaparray[0, :, :]
+
+        # Write each fuel as 3d table
+        if verbose >= 2:
+            print(f">> Store properties maps")
+        basefuelname = f"{_ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]}1"
+        for propertyname in vars(self.scenario.fuels[basefuelname]):
+            propertyobj = getattr(self.scenario.fuels[basefuelname], propertyname)
+            if propertyobj.propertyindex is not None:
+                FuelMap = NewFile.createVariable(
+                    f"Fuel{propertyobj.propertyindex + 1:02d}", np.float64, ("YFIRE", "XFIRE")
+                )
+                FuelMap.standard_name = propertyobj.name
+                FuelMap.COMMENT = propertyobj.description
+                FuelMap.UNITS = propertyobj.unit
+                FuelMap.GRID = np.intc(4)
+                FuelMap[:, :] = self.fuelmaparray[propertyobj.propertyindex, :, :]
+
+        if verbose >= 1:
+            print(f">>> Close FuelMap2d.nc")
+
+        NewFile.close()
 
 
 def njit_wrapper(function):
