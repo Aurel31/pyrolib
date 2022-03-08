@@ -413,12 +413,7 @@ class BalbiFuel(BaseFuel):
             self.DeltaH.value * (1 - self.X0.value) * (1.0 - xsi) / (self.cpa.value * (1.0 + self.stoch.value))
         )
         R00 = B * pow(T, 4) / (self.cp.value * (self.Ti.value - self.Ta.value))
-        V00 = (
-            2.0
-            * self.LAI.value
-            * (1.0 + self.stoch.value)
-            * T
-            * self.rhod.value
+        V00 = ( 2.0 * self.LAI.value * (1.0 + self.stoch.value) * T * self.rhod.value
             / (self.rhoa.value * self.Ta.value * self.tau0.value)
         )
         v0 = nu * V00
