@@ -996,8 +996,8 @@ class FuelMap:
         )
         self.yfiremesh += 0.5 * (self.yfiremesh[1] - self.yfiremesh[0])
 
-    def addRectanglePatch(
-        self, xpos: tuple, ypos: tuple, fuelindex: int = None, ignitiontime: float = None, unburnable: bool = None
+    def __add_rectangle_patch(
+        self, xpos: tuple, ypos: tuple, fuel_index: int = None, ignition_time: float = None, unburnable: bool = None
     ):
         """Add rectangle patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
@@ -1040,26 +1040,145 @@ class FuelMap:
             Position of west and east boundaries of the patch
         ypos : tuple
             Position of south and north boundaries of the patch
-        FuelIndex : int, optional
+        fuel_index : int, optional
             Index of Fuel in Scenario to place in the patch (default: `None`)
-        IgnitionTime : float, optional
+        ignition_time : float, optional
             Ignition time of patch (default: `None`)
-        Unburnable : bool, optional
+        unburnable : bool, optional
             Flag to set patch as a non burnable area (default: `None`)
         """
         # Create mask
         P = RectanglePatch(self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize)
 
         # assign data
-        self.__assign_data_to_data_array(P, fuelindex, None, ignitiontime, unburnable)
+        self.__assign_data_to_data_array(P, fuel_index, None, ignition_time, unburnable)
 
-    def addLinePatch(
+    def add_rectangle_patch_fuel(self, xpos: tuple, ypos: tuple, fuel_index: int):
+        """Add rectangle fuel patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+
+        This method first sets the mask corresponding to the following scheme,
+        then assigns the needed data in the appropriated array.
+
+        It assigns a fuel type in the masked area through its index.
+        The fuel assigned depends on its index and the selected rate of spread parameterization in the Méso-NH namelist.
+
+
+        .. aafig::
+            +--------------------------------------------------+
+            │MesoNH domain                                     │
+            │                                                  │
+            │                                                  │
+            │                                       (x1, y1)   │
+            │               +----------------------+           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               │xxxxx            xxxxx│           │
+            │               │xxxxx Fuel Patch xxxxx│           │
+            │               │xxxxx            xxxxx│           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               +----------------------+           │
+            │       (x0, y0)                                   │
+            │                                                  │
+            +--------------------------------------------------+
+
+        Parameters
+        -----
+
+        xpos : tuple
+            Position of west and east boundaries of the patch
+        ypos : tuple
+            Position of south and north boundaries of the patch
+        fuel_index : int
+            Index of Fuel in Scenario to place in the patch
+        """
+        self.__add_rectangle_patch(xpos, ypos, fuel_index=fuel_index)
+
+    def add_rectangle_patch_unburnable(self, xpos: tuple, ypos: tuple):
+        """Add rectangle unburnable patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+
+        This method first sets the mask corresponding to the following scheme,
+        then assigns the needed data in the appropriated array.
+
+        It specifies that the patch can not burn (ROS = 0 m s-1 in that area).
+
+
+        .. aafig::
+            +--------------------------------------------------+
+            │MesoNH domain                                     │
+            │                                                  │
+            │                                                  │
+            │                                       (x1, y1)   │
+            │               +----------------------+           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               │xxxxx            xxxxx│           │
+            │               │xxxxx    Patch   xxxxx│           │
+            │               │xxxxx            xxxxx│           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               +----------------------+           │
+            │       (x0, y0)                                   │
+            │                                                  │
+            +--------------------------------------------------+
+
+        Parameters
+        -----
+
+        xpos : tuple
+            Position of west and east boundaries of the patch
+        ypos : tuple
+            Position of south and north boundaries of the patch
+        """
+        self.__add_rectangle_patch(xpos, ypos, unburnable=True)
+
+    def add_rectangle_patch_ignition(self, xpos: tuple, ypos: tuple, ignition_time: float):
+        """Add rectangle patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+
+        This method first sets the mask corresponding to the following scheme,
+        then assigns the needed data in the appropriated array.
+
+        It specifies an ignition time for the whole patch.
+
+
+        .. aafig::
+            +--------------------------------------------------+
+            │MesoNH domain                                     │
+            │                                                  │
+            │                                                  │
+            │                                       (x1, y1)   │
+            │               +----------------------+           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               │xxxxx            xxxxx│           │
+            │               │xxxxx    Patch   xxxxx│           │
+            │               │xxxxx            xxxxx│           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               │xxxxxxxxxxxxxxxxxxxxxx│           │
+            │               +----------------------+           │
+            │       (x0, y0)                                   │
+            │                                                  │
+            +--------------------------------------------------+
+
+        Parameters
+        -----
+
+        xpos : tuple
+            Position of west and east boundaries of the patch
+        ypos : tuple
+            Position of south and north boundaries of the patch
+        ignition_time : float
+            Ignition time of patch
+        """
+        self.__add_rectangle_patch(xpos, ypos, ignition_time=ignition_time)
+
+    def __add_line_patch(
         self,
         xpos: tuple,
         ypos: tuple,
-        fuelindex: int = None,
-        walkingignitiontimes: list = None,
-        ignitiontime: float = None,
+        fuel_index: int = None,
+        walking_ignition_times: list = None,
+        ignition_time: float = None,
         unburnable: bool = None,
     ):
         """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
@@ -1104,18 +1223,172 @@ class FuelMap:
             Position of west and east boundaries of the patch
         ypos : tuple
             Position of south and north boundaries of the patch
-        FuelIndex : int, optional
+        fuel_index : int, optional
             Index of Fuel in Scenario to place in the patch (default: `None`)
-        IgnitionTime : float, optional
+        walking_ignition_times : list, optional
+            Ignition times of points A and B of the ignition line, respectively (default: `None`)
+        ignition_time : float, optional
             Ignition time of patch (default: `None`)
-        Unburnable : bool, optional
+        unburnable : bool, optional
             Flag to set patch as a non burnable area (default: `None`)
         """
         # Create mask
         P = LinePatch(self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize)
 
         # # assign data
-        self.__assign_data_to_data_array(P, fuelindex, walkingignitiontimes, ignitiontime, unburnable)
+        self.__assign_data_to_data_array(P, fuel_index, walking_ignition_times, ignition_time, unburnable)
+
+    def add_line_patch_fuel(self, xpos: tuple, ypos: tuple, fuel_index: int):
+        """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+
+        This method first sets the mask corresponding to the following scheme,
+        then assigns the needed data in the appropriated array.
+
+        It assigns a fuel type in the masked area through its index.
+        The fuel assigned depends on its index and the selected rate of spread parameterization.
+
+        The mask is determined by a bresenham algorithm.
+
+
+        .. aafig::
+            +--------------------------------------------------+
+            │MesoNH domain                                     │
+            │                                                  │
+            │                                                  │
+            │                            -> (x1, y1)           │
+            │                          _/                      │
+            │                       __/                        │
+            │                     _/                           │
+            │                   _/                             │
+            │                __/                               │
+            │     (x0, y0) _/                                  │
+            │                                                  │
+            +--------------------------------------------------+
+
+        Parameters
+        -----
+
+        xpos : tuple
+            Position of west and east boundaries of the patch
+        ypos : tuple
+            Position of south and north boundaries of the patch
+        fuel_index : int
+            Index of Fuel in Scenario to place in the patch
+        """
+        self.__add_line_patch(xpos, ypos, fuel_index=fuel_index)
+
+    def add_line_patch_walking_ignition(self, xpos: tuple, ypos: tuple, walking_ignition_times: list):
+        """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+
+        This method first sets the mask corresponding to the following scheme,
+        then assigns the needed data in the appropriated array.
+
+        It specifies an ignition time `t_a` for point A (x0, y0)
+          and `t_b`  for point B (x1, y1) where `t_b > t_a`.
+
+        The mask is determined by a bresenham algorithm.
+
+
+        .. aafig::
+            +--------------------------------------------------+
+            │MesoNH domain                                     │
+            │                                                  │
+            │                                                  │
+            │                            -> (x1, y1)           │
+            │                          _/                      │
+            │                       __/                        │
+            │                     _/                           │
+            │                   _/                             │
+            │                __/                               │
+            │     (x0, y0) _/                                  │
+            │                                                  │
+            +--------------------------------------------------+
+
+        Parameters
+        -----
+
+        xpos : tuple
+            Position of west and east boundaries of the patch
+        ypos : tuple
+            Position of south and north boundaries of the patch
+        walking_ignition_times : list
+            Ignition times of points A and B of the ignition line, respectively
+        """
+        self.__add_line_patch(xpos, ypos, walking_ignition_times=walking_ignition_times)
+
+    def add_line_patch_ignition(self, xpos: tuple, ypos: tuple, ignition_time: float):
+        """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+
+        This method first sets the mask corresponding to the following scheme,
+        then assigns the needed data in the appropriated array.
+
+        It specifies an ignition time for the whole patch.
+
+        The mask is determined by a bresenham algorithm.
+
+
+        .. aafig::
+            +--------------------------------------------------+
+            │MesoNH domain                                     │
+            │                                                  │
+            │                                                  │
+            │                            -> (x1, y1)           │
+            │                          _/                      │
+            │                       __/                        │
+            │                     _/                           │
+            │                   _/                             │
+            │                __/                               │
+            │     (x0, y0) _/                                  │
+            │                                                  │
+            +--------------------------------------------------+
+
+        Parameters
+        -----
+
+        xpos : tuple
+            Position of west and east boundaries of the patch
+        ypos : tuple
+            Position of south and north boundaries of the patch
+        ignition_time : float
+            Ignition time of patch
+        """
+        self.__add_line_patch(xpos, ypos, ignition_time=ignition_time)
+
+    def add_line_patch_unburnable(self, xpos: tuple, ypos: tuple):
+        """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+
+        This method first sets the mask corresponding to the following scheme,
+        then assigns the needed data in the appropriated array.
+
+        It Specifies that the patch can not burn (ROS = 0 m s-1 in that area).
+
+        The mask is determined by a bresenham algorithm.
+
+
+        .. aafig::
+            +--------------------------------------------------+
+            │MesoNH domain                                     │
+            │                                                  │
+            │                                                  │
+            │                            -> (x1, y1)           │
+            │                          _/                      │
+            │                       __/                        │
+            │                     _/                           │
+            │                   _/                             │
+            │                __/                               │
+            │     (x0, y0) _/                                  │
+            │                                                  │
+            +--------------------------------------------------+
+
+        Parameters
+        -----
+
+        xpos : tuple
+            Position of west and east boundaries of the patch
+        ypos : tuple
+            Position of south and north boundaries of the patch
+        """
+        self.__add_line_patch(xpos, ypos, unburnable=True)
 
     def __assign_data_to_data_array(
         self,
