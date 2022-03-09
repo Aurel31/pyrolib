@@ -6,5 +6,5 @@ __maintainer__ = "Aurélien Costes"
 __email__ = "aurelien.costes31@gmail.com"
 
 from . import fuels
-from . import firefluxpost
+from . import data_processing
 from . import blaze
