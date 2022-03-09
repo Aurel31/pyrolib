@@ -19,7 +19,7 @@ try:
     has_numba = True
 except ImportError:
     has_numba = False
-    print("WARNING: Fail to find numba, loop acceleration will be not activated")
+    print("WARNING: Failed to find numba, loop acceleration will be not activated")
     pass
 
 
