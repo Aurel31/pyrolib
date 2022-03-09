@@ -3,13 +3,14 @@
 
 import pytest
 
-import pyrolib.fuels as pl
+import pyrolib.fuelmap as pl
+from pyrolib.fuelmap.fuels import FuelProperty
 
 """
 Parameter
 """
 def test_property_init():
-    fuelproperty = pl.FuelProperty("test", 0., "-", "none", propertyindex=None)
+    fuelproperty = FuelProperty("test", 0., "-", "none", propertyindex=None)
     assert fuelproperty.name == "test"
     assert fuelproperty.value == 0.
     assert fuelproperty.unit == "-"
@@ -18,20 +19,20 @@ def test_property_init():
 
 
 def test_property_set():
-    fuelproperty = pl.FuelProperty("test", 0., "-", "none", propertyindex=None)
+    fuelproperty = FuelProperty("test", 0., "-", "none", propertyindex=None)
     fuelproperty.set(1.)
     assert fuelproperty.value == 1.
 
 
 def test_property_show(capsys):
-    fuelproperty = pl.FuelProperty("test", 0., "-", "none", propertyindex=None)
+    fuelproperty = FuelProperty("test", 0., "-", "none", propertyindex=None)
     fuelproperty.show()
     captured = capsys.readouterr()
     assert captured.out == "Property    test = 0.000e+00 [-     ] as none\n"
 
 
 def test_property_minimal_dict():
-    fuelproperty = pl.FuelProperty("test", 0., "-", "none", propertyindex=None)
+    fuelproperty = FuelProperty("test", 0., "-", "none", propertyindex=None)
     mdict = fuelproperty.minimal_dict()
     assert mdict["description"] == "none"
     assert mdict["unit"] == "-"

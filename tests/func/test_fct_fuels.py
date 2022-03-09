@@ -3,7 +3,7 @@
 
 import os
 
-import pyrolib.fuels as pl
+import pyrolib.fuelmap as pl
 import pytest
 
 

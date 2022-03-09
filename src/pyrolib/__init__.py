@@ -5,6 +5,6 @@ __version__ = "0.1.2"
 __maintainer__ = "Aurélien Costes"
 __email__ = "aurelien.costes31@gmail.com"
 
-from . import fuels
+from . import fuelmap
 from . import data_processing
 from . import blaze
