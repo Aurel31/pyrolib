@@ -10,6 +10,7 @@ import yaml
 
 from .fuels import(
     BalbiFuel,
+    show_fuel_classes,
 )
 
 def load_fuel_database(filename):
@@ -23,7 +24,7 @@ def load_fuel_database(filename):
     # check file name
     if filename.endswith(".yml"):
         fname = filename
-        db_name = filename[:-4]
+        db_name = filename.replace('.yml','')
     else:
         fname = filename + ".yml"
         db_name = filename
@@ -113,10 +114,52 @@ def dump_current_fuel_database(filename, info, compact=True):
     pass
 
 
-def list_avail_fuel_database():
+def list_avail_fuel_database(show_db_content=True):
     """List every scenario file in data/scenario directory
     """
-    pass
+    data_dir_content = pkg_resources.resource_listdir("pyrolib", "data/fuel_db")
+    data_dir_content.sort()
+    print("----- pyrolib available database -----")
+    for file in data_dir_content:
+        if file.endswith(".yml"):
+            print(f"  * {file.replace('.yml','')}")
+            if show_db_content:
+                # print db fuels
+                defaultpath = pkg_resources.resource_stream("pyrolib", "/".join(("data/fuel_db", file)))
+                with open(defaultpath.name, "r") as ymlfile:
+                    alldata = yaml.safe_load(ymlfile)
+                for fuel_description in alldata['fuels'].keys():
+                    print(f"    < {fuel_description} > available for:")
+                    for fuel_class in alldata['fuels'][fuel_description].keys():
+                        fuel_class = alldata['fuels'][fuel_description][fuel_class]["class"]
+                        print(f"      - {fuel_class} fuel class")
+            print("\n")
+
+    print("------ local available database -----")
+    data_dir_content = os.listdir()
+    data_dir_content.sort()
+    for file in data_dir_content:
+        if file.endswith(".yml"):
+            # load file
+            with open(file, "r") as ymlfile:
+                    alldata = yaml.safe_load(ymlfile)
+            # check if is_compact, infos, and fuels are in keys
+            if ("is_compact" in alldata.keys() and
+                "infos" in alldata.keys() and
+                "fuels" in alldata.keys()
+                ):
+                print(f"  * {file.replace('.yml','')}")
+                if show_db_content:
+                    # print db fuels
+                    for fuel_description in alldata['fuels'].keys():
+                        print(f"    < {fuel_description} > available for:")
+                        for fuel_class in alldata['fuels'][fuel_description].keys():
+                            fuel_class = alldata['fuels'][fuel_description][fuel_class]["class"]
+                            print(f"      - {fuel_class} fuel class")
+                print("\n")
+    print("-------------------------------------")
+    show_fuel_classes(show_fuel_properties=False)
+
 
 def show_current_fuel_database():
     """

@@ -426,10 +426,13 @@ _ROSMODEL_FUELCLASS_REGISTER = {
 }
 
 
-def show_fuel_classes():
+def show_fuel_classes(show_fuel_properties=True):
     """Print fuel classes available in pyrolib and default parameters values"""
     # Balbi
-    print(f"\n{type(BalbiFuel()).__name__} class is compliant with Balbi's ROS parameterization.")
-    print("It contains the following properties with default value:")
-    BalbiFuel().print_parameters()
-    print("")
+    print("\nMore information about fuel classes:")
+    print(f"* < {type(BalbiFuel()).__name__} > class is compliant with the Balbi's ROS parameterization.")
+    print(f"  It is used when < CPROPAG_MODEL = SANTONI2011 > in the Méso-NH namelist.")
+    if show_fuel_properties:
+        print("It contains the following properties with default value:")
+        BalbiFuel().print_parameters()
+        print("")
