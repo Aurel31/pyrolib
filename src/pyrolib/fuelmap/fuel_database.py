@@ -112,7 +112,29 @@ class FuelDatabase:
             info (str): information about the database
             compact (bool, optional): writting format. Defaults to True.
         """
-        pass
+        # check file name
+        if filename is None:
+            filename = self.name
+        if filename.endswith(".yml"):
+            fname = filename
+        else:
+            fname = filename + ".yml"
+
+        # create data to store
+        dict_to_store = {}
+        for fuel_description in self.fuels.keys():
+            # iterate on fuel classes
+            minimal_dict_of_fuels = {}
+            for fuel in self.fuels[fuel_description].keys():
+                minimal_dict_of_fuels[type(self.fuels[fuel_description][fuel]).__name__] = self.fuels[fuel_description][fuel].minimal_dict(compact=compact)
+            # add to dict to store
+            dict_to_store[fuel_description] = minimal_dict_of_fuels
+        #
+        with open(fname, "w") as ymlfile:
+            yaml.dump({"infos": info}, ymlfile)
+            yaml.dump({"is_compact": compact}, ymlfile)
+            # save minimal dict of each fuel
+            yaml.dump({"Fuels": dict_to_store}, ymlfile)
 
     @staticmethod
     def list_avail_fuel_database(show_db_content=True):
