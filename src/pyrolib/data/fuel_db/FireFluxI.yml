@@ -2,7 +2,7 @@ infos: Fuel parameters for FireFlux experiment used for Costes et al. (2021)
 is_compact: False
 fuels:
   tall_grass:
-    Balbi:
+    BalbiFuel:
       class: BalbiFuel
       properties:
         DeltaH:

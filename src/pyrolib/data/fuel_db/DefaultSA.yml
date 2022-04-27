@@ -2,7 +2,7 @@ infos: Fuel parameters used in A. Costes PhD Thesis SA study (2021)
 is_compact: false
 fuels:
   default:
-    Balbi:
+    BalbiFuel:
       class: BalbiFuel
       properties:
         DeltaH:
