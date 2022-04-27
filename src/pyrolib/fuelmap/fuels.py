@@ -435,4 +435,4 @@ def show_fuel_classes(show_fuel_properties=True):
     if show_fuel_properties:
         print("It contains the following properties with default value:")
         BalbiFuel().print_parameters()
-        print("")
+    print()
