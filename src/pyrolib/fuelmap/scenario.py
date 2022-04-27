@@ -64,6 +64,7 @@ class Scenario:
     """
 
     def __init__(self, name="Scenario", longname=None, infos="", load=None):
+        print("DEPRECATED. Used FuelDatabase class instead")
         self.name = name
         if longname is None:
             self.longname = self.name
