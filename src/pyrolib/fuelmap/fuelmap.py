@@ -1,6 +1,7 @@
 """ FuelMap file building tools
 """
 
+import sys
 import os
 from math import pow, sqrt
 from shutil import copy2
@@ -9,19 +10,20 @@ import numpy as np
 import pkg_resources
 import yaml
 from netCDF4 import Dataset
-
+import f90nml
 
 from .fuels import (
     _ROSMODEL_FUELCLASS_REGISTER,
     _ROSMODEL_NB_PROPERTIES,
+    BalbiFuel,
 )
 from .patch import (
     DataPatch,
     LinePatch,
     RectanglePatch,
 )
-from .scenario import (
-    Scenario,
+from.fuel_database import (
+    FuelDatabase,
 )
 from .utility import (
     fire_array_2d_to_3d,
@@ -70,8 +72,8 @@ class FuelMap:
     Parameters
     ----------
 
-    scenario : pyrolib.fuels.Scenario
-        Scenario containing fuel data.
+    fuel_db : pyrolib.FuelDatabase
+        fuel database containing fuel data.
     namelistname : str, optional
         MesoNH namelist name (default: 'EXSEG1.nam').
     MesoNHversion : str, optional
@@ -80,8 +82,8 @@ class FuelMap:
 
     """
 
-    def __init__(self, scenario: Scenario, namelistname="EXSEG1.nam", MesoNHversion: str = "5.5.0", workdir: str = ""):
-        self.scenario = scenario
+    def __init__(self, fuel_db: FuelDatabase, namelistname: str="EXSEG1.nam", MesoNHversion: str="5.5.0", workdir: str=""):
+        self.fuel_db = fuel_db
         self.namelist = namelistname
         self.mnh_version = MesoNHversion
         self.workdir = workdir
@@ -92,8 +94,8 @@ class FuelMap:
         with open(defaultpath.name, "r") as ymlfile:
             alldata = yaml.safe_load(ymlfile)
         current_version = f"v{self.mnh_version.replace('.', '')}"
-
-        self.MNHinifile = alldata[current_version]["MNHinifile"]
+        # set default value for namelist variables
+        self.mnhinifile = alldata[current_version]["mnhinifile"]
         self.cpropag_model = alldata[current_version]["cpropag_model"]
         self.nrefinx = alldata[current_version]["nrefinx"]
         self.nrefiny = alldata[current_version]["nrefiny"]
@@ -109,9 +111,10 @@ class FuelMap:
         self.__get_info_from_namelist()
 
         self.nbpropertiesfuel = _ROSMODEL_NB_PROPERTIES[self.cpropag_model]
+        self.fuel_index_correspondance = {}
         # allocate fuel data array
         self.fuelmaparray = np.zeros((self.nbpropertiesfuel, self.firemeshsizes[1], self.firemeshsizes[0]))
-        self.ignitionmaparray = 1e6 * np.zeros((self.firemeshsizes[1], self.firemeshsizes[0]))
+        self.ignitionmaparray = 1e6 * np.ones((self.firemeshsizes[1], self.firemeshsizes[0]))
         self.walkingignitionmaparray = -1.0 * np.ones_like(self.ignitionmaparray)
 
     def __get_info_from_namelist(self):
@@ -125,23 +128,19 @@ class FuelMap:
             raise IOError(f"File {self.namelist:s} not found")
 
         # get MNH init file name
-        with open(f"{projectpath:s}/{self.namelist:s}") as F1:
-            text = F1.readlines()
-            for line in text:
-                # delete spaces ans separation characters
-                line = "".join(line.split())
-                line = line.replace(",", "")
-                line = line.replace("/", "")
-                # Check parameters in namelist
-                if "INIFILE=" in line:
-                    self.mnhinifile = line.split("INIFILE=")[-1].split("'")[1]
-                if "CPROPAG_MODEL=" in line:
-                    self.cpropag_model = line.split("CPROPAG_MODEL=")[-1].split("'")[1]
-                if "NREFINX=" in line:
-                    self.nrefinx = int(line.split("NREFINX=")[-1])
-                if "NREFINY=" in line:
-                    self.nrefiny = int(line.split("NREFINY=")[-1])
-        #
+        mnh_nml = f90nml.read(f"{projectpath:s}/{self.namelist:s}")
+        # Check parameters in namelist
+        if "nam_lunitn" in mnh_nml.keys():
+            if "cinifile" in mnh_nml["nam_lunitn"].keys():
+                self.mnhinifile = mnh_nml["nam_lunitn"]["cinifile"]
+        if "nam_fire" in mnh_nml.keys():
+            if "cpropag_model" in mnh_nml["nam_fire"].keys():
+                self.cpropag_model = mnh_nml["nam_fire"]["cpropag_model"]
+            if "nrefinx" in mnh_nml["nam_fire"].keys():
+                self.nrefinx = mnh_nml["nam_fire"]["nrefinx"]
+            if "nrefiny" in mnh_nml["nam_fire"].keys():
+                self.nrefiny = mnh_nml["nam_fire"]["nrefiny"]
+
         # Check if INIFILE.des exists
         if not os.path.exists(f"{projectpath:s}/{self.mnhinifile:s}.des"):
             raise IOError(f"File {self.mnhinifile:s}.des not found")
@@ -173,7 +172,7 @@ class FuelMap:
         self.yfiremesh += 0.5 * (self.yfiremesh[1] - self.yfiremesh[0])
 
     def __add_rectangle_patch(
-        self, xpos: tuple, ypos: tuple, fuel_index: int = None, ignition_time: float = None, unburnable: bool = None
+        self, xpos: tuple, ypos: tuple, fuel_key: str = None, ignition_time: float = None, unburnable: bool = None
     ):
         """Add rectangle patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
@@ -216,8 +215,8 @@ class FuelMap:
             Position of west and east boundaries of the patch
         ypos : tuple
             Position of south and north boundaries of the patch
-        fuel_index : int, optional
-            Index of Fuel in Scenario to place in the patch (default: `None`)
+        fuel_key : str, optional
+            Key of Fuel in FuelDatabase to place in the patch (default: `None`)
         ignition_time : float, optional
             Ignition time of patch (default: `None`)
         unburnable : bool, optional
@@ -227,9 +226,9 @@ class FuelMap:
         P = RectanglePatch(self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize)
 
         # assign data
-        self.__assign_data_to_data_array(P, fuel_index, None, ignition_time, unburnable)
+        self.__assign_data_to_data_array(P, fuel_key, None, ignition_time, unburnable)
 
-    def add_fuel_rectangle_patch(self, xpos: tuple, ypos: tuple, fuel_index: int):
+    def add_fuel_rectangle_patch(self, xpos: tuple, ypos: tuple, fuel_key: str):
         """Add rectangle fuel patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -265,10 +264,10 @@ class FuelMap:
             Position of west and east boundaries of the patch
         ypos : tuple
             Position of south and north boundaries of the patch
-        fuel_index : int
-            Index of Fuel in Scenario to place in the patch
+        fuel_key : str
+            key of Fuel in fuel database to place in the patch
         """
-        self.__add_rectangle_patch(xpos, ypos, fuel_index=fuel_index)
+        self.__add_rectangle_patch(xpos, ypos, fuel_key=fuel_key)
 
     def add_unburnable_rectangle_patch(self, xpos: tuple, ypos: tuple):
         """Add rectangle unburnable patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
@@ -352,7 +351,7 @@ class FuelMap:
         self,
         xpos: tuple,
         ypos: tuple,
-        fuel_index: int = None,
+        fuel_key: str = None,
         walking_ignition_times: list = None,
         ignition_time: float = None,
         unburnable: bool = None,
@@ -399,8 +398,8 @@ class FuelMap:
             Position of west and east boundaries of the patch
         ypos : tuple
             Position of south and north boundaries of the patch
-        fuel_index : int, optional
-            Index of Fuel in Scenario to place in the patch (default: `None`)
+        fuel_key : str, optional
+            Index of Fuel in FuelDatabase to place in the patch (default: `None`)
         walking_ignition_times : list, optional
             Ignition times of points A and B of the ignition line, respectively (default: `None`)
         ignition_time : float, optional
@@ -409,12 +408,12 @@ class FuelMap:
             Flag to set patch as a non burnable area (default: `None`)
         """
         # Create mask
-        P = LinePatch(self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize)
+        patch = LinePatch(self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize)
 
         # # assign data
-        self.__assign_data_to_data_array(P, fuel_index, walking_ignition_times, ignition_time, unburnable)
+        self.__assign_data_to_data_array(patch, fuel_key, walking_ignition_times, ignition_time, unburnable)
 
-    def add_fuel_line_patch(self, xpos: tuple, ypos: tuple, fuel_index: int):
+    def add_fuel_line_patch(self, xpos: tuple, ypos: tuple, fuel_key: str):
         """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -448,10 +447,10 @@ class FuelMap:
             Position of west and east boundaries of the patch
         ypos : tuple
             Position of south and north boundaries of the patch
-        fuel_index : int
-            Index of Fuel in Scenario to place in the patch
+        fuel_key : str
+            Key of Fuel in fuel database to place in the patch
         """
-        self.__add_line_patch(xpos, ypos, fuel_index=fuel_index)
+        self.__add_line_patch(xpos, ypos, fuel_key=fuel_key)
 
     def add_walking_ignition_line_patch(self, xpos: tuple, ypos: tuple, walking_ignition_times: list):
         """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
@@ -569,7 +568,7 @@ class FuelMap:
     def __assign_data_to_data_array(
         self,
         patch: DataPatch,
-        fuelindex: int = None,
+        fuel_key: str = None,
         walkingignitiontimes: tuple = None,
         ignitiontime: float = None,
         unburnable: bool = None,
@@ -579,7 +578,7 @@ class FuelMap:
 
         4 types of data can be allocated in the patch:
             - Fuel properties
-                Select a fuel number (it should be contained in the Scenario object loaded in the FuelMap object).
+                Select a fuel number (it should be contained in the FuelDatabase object loaded in the FuelMap object).
                 The corresponding fuel properties of the selected Fuel are assigned in the patch
 
             - Walking ignition times (only for LinePatch)
@@ -595,22 +594,36 @@ class FuelMap:
                 Be carreful for futur implementation of new fire spread parameterization to not have 0 division with this process.
         """
         # case 1 : FuelIndex is set
-        if isinstance(fuelindex, int):
-            # check if needed fuel (corresponding fuel class and number of FuelIndex)
-            fuelname = f"{_ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]}{fuelindex}"
-            if fuelname in self.scenario.fuels.keys():
-                # create property vector for this fuel
-                propvector = self.scenario.fuels[fuelname].get_property_vector(fuelindex, self.nbpropertiesfuel)
-                self.fuelmaparray = fill_fuel_array_from_patch(
-                    self.fuelmaparray,
-                    patch.datamask,
-                    propvector,
-                    self.nbpropertiesfuel,
-                    self.firemeshsizes[0],
-                    self.firemeshsizes[1],
-                )
+        if isinstance(fuel_key, str):
+            if fuel_key in self.fuel_db.fuels.keys():
+                # check if needed fuel (corresponding fuel class and number of FuelIndex)
+                needed_fuelclass = _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]
+                if needed_fuelclass in self.fuel_db.fuels[fuel_key].keys():
+                    # retrieve fuel index
+                    if fuel_key in self.fuel_index_correspondance.keys():
+                        fuelindex = self.fuel_index_correspondance[fuel_key]
+                    else:
+                        maxindex = 0
+                        for idx in self.fuel_index_correspondance.values():
+                            maxindex = max(maxindex, idx)
+                        fuelindex = maxindex + 1
+                        self.fuel_index_correspondance[fuel_key] = fuelindex
+
+                    # create property vector for this fuel
+                    propvector = self.fuel_db.fuels[fuel_key][needed_fuelclass].get_property_vector(fuelindex, self.nbpropertiesfuel)
+
+                    self.fuelmaparray = fill_fuel_array_from_patch(
+                        self.fuelmaparray,
+                        patch.datamask,
+                        propvector,
+                        self.nbpropertiesfuel,
+                        self.firemeshsizes[0],
+                        self.firemeshsizes[1],
+                    )
+                else:
+                    print(f"Fuel < {fuel_key} > do not exist in database with the needed Fuel Class < {needed_fuelclass} >.")
             else:
-                print(f"Fuel {fuelname} Not found in Scenario. Nothing appended")
+                print(f"Fuel < {fuel_key} > not found in the fuel database. Nothing appended")
             return
 
         # case 2 : walking ignition process
@@ -769,9 +782,9 @@ class FuelMap:
         # Write each fuel as 3d table
         if verbose >= 2:
             print(f">> Store properties maps")
-        BaseFuelname = f"{_ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]}1"
-        for propertyname in vars(self.scenario.fuels[BaseFuelname]):
-            propertyobj = getattr(self.scenario.fuels[BaseFuelname], propertyname)
+        chosen_fuel_class = getattr(sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model])()
+        for propertyname in vars(chosen_fuel_class):
+            propertyobj = getattr(chosen_fuel_class, propertyname)
             if propertyobj.propertyindex is not None:
                 FuelMap = NewFile.createVariable(f"Fuel{propertyobj.propertyindex + 1:02d}", np.float64, ("F", "Y", "X"))
                 FuelMap.standard_name = propertyobj.name
@@ -786,6 +799,7 @@ class FuelMap:
             print(f">>> Close FuelMap.nc")
 
         NewFile.close()
+        self.__show_fuel_index_correspondance()
 
     def dump(self, verbose: int = 0):
         """Write 2D Fuel map as netCFD file named FuelMap2d.nc
@@ -914,9 +928,9 @@ class FuelMap:
         # Write each fuel as 3d table
         if verbose >= 2:
             print(f">> Store properties maps")
-        basefuelname = f"{_ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]}1"
-        for propertyname in vars(self.scenario.fuels[basefuelname]):
-            propertyobj = getattr(self.scenario.fuels[basefuelname], propertyname)
+        chosen_fuel_class = getattr(sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model])()
+        for propertyname in vars(chosen_fuel_class):
+            propertyobj = getattr(chosen_fuel_class, propertyname)
             if propertyobj.propertyindex is not None:
                 FuelMap = NewFile.createVariable(
                     f"Fuel{propertyobj.propertyindex + 1:02d}", np.float64, ("YFIRE", "XFIRE")
@@ -931,3 +945,13 @@ class FuelMap:
             print(f">>> Close FuelMap2d.nc")
 
         NewFile.close()
+        self.__show_fuel_index_correspondance()
+
+    def __show_fuel_index_correspondance(self):
+        """print fuel index correspondance dict
+        """
+        print("---------- fuel index table ----------")
+        print(" Index |             Fuel             ")
+        for fuel in self.fuel_index_correspondance.keys():
+            print(f"  {self.fuel_index_correspondance[fuel]:3d}  | {fuel}")
+        print("--------------------------------------")
