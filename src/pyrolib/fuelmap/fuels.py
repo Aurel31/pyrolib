@@ -193,7 +193,7 @@ class BaseFuel(ABC):
     def get_property_vector(self, fuelindex, nbofproperties):
         """Construct the array of fuel properties value.
 
-        The first index is the fuel index in the scenario, the following content is the value of each fuel property.
+        The fuel index is an identifier of the fuel, the following content is the value of each fuel property.
         Corresponding index in the array is the `propertyindex` of the :class:`~pyrolib.fuels.FuelProperty`.
 
         Parameters
@@ -211,7 +211,6 @@ class BaseFuel(ABC):
             array of [fuel index, *properties_value]
         """
         PropertyVector = np.zeros(nbofproperties)
-        # fuel number in scenario
         PropertyVector[0] = fuelindex
         for parameter in vars(self).values():
             if parameter.propertyindex is not None:
