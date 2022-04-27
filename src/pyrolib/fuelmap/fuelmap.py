@@ -229,7 +229,7 @@ class FuelMap:
         # assign data
         self.__assign_data_to_data_array(P, fuel_index, None, ignition_time, unburnable)
 
-    def add_rectangle_patch_fuel(self, xpos: tuple, ypos: tuple, fuel_index: int):
+    def add_fuel_rectangle_patch(self, xpos: tuple, ypos: tuple, fuel_index: int):
         """Add rectangle fuel patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -270,7 +270,7 @@ class FuelMap:
         """
         self.__add_rectangle_patch(xpos, ypos, fuel_index=fuel_index)
 
-    def add_rectangle_patch_unburnable(self, xpos: tuple, ypos: tuple):
+    def add_unburnable_rectangle_patch(self, xpos: tuple, ypos: tuple):
         """Add rectangle unburnable patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -308,7 +308,7 @@ class FuelMap:
         """
         self.__add_rectangle_patch(xpos, ypos, unburnable=True)
 
-    def add_rectangle_patch_ignition(self, xpos: tuple, ypos: tuple, ignition_time: float):
+    def add_ignition_rectangle_patch(self, xpos: tuple, ypos: tuple, ignition_time: float):
         """Add rectangle patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -414,7 +414,7 @@ class FuelMap:
         # # assign data
         self.__assign_data_to_data_array(P, fuel_index, walking_ignition_times, ignition_time, unburnable)
 
-    def add_line_patch_fuel(self, xpos: tuple, ypos: tuple, fuel_index: int):
+    def add_fuel_line_patch(self, xpos: tuple, ypos: tuple, fuel_index: int):
         """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -453,7 +453,7 @@ class FuelMap:
         """
         self.__add_line_patch(xpos, ypos, fuel_index=fuel_index)
 
-    def add_line_patch_walking_ignition(self, xpos: tuple, ypos: tuple, walking_ignition_times: list):
+    def add_walking_ignition_line_patch(self, xpos: tuple, ypos: tuple, walking_ignition_times: list):
         """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -492,7 +492,7 @@ class FuelMap:
         """
         self.__add_line_patch(xpos, ypos, walking_ignition_times=walking_ignition_times)
 
-    def add_line_patch_ignition(self, xpos: tuple, ypos: tuple, ignition_time: float):
+    def add_ignition_line_patch(self, xpos: tuple, ypos: tuple, ignition_time: float):
         """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -530,7 +530,7 @@ class FuelMap:
         """
         self.__add_line_patch(xpos, ypos, ignition_time=ignition_time)
 
-    def add_line_patch_unburnable(self, xpos: tuple, ypos: tuple):
+    def add_unburnable_line_patch(self, xpos: tuple, ypos: tuple):
         """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
 
         This method first sets the mask corresponding to the following scheme,
