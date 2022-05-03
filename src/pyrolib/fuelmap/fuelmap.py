@@ -692,6 +692,7 @@ class FuelMap:
         NewFile.MNH_REAL = "8"
         NewFile.MNH_INT = "4"
         NewFile.MNH_cleanly_closed = "yes"
+        NewFile.MNH_REDUCE_DIMENSIONS_IN_FILES = "1"
 
         NewFile.createDimension("X", self.nx)
         NewFile.createDimension("Y", self.ny)
@@ -828,6 +829,7 @@ class FuelMap:
         NewFile.MNH_REAL = "8"
         NewFile.MNH_INT = "4"
         NewFile.MNH_cleanly_closed = "yes"
+        NewFile.MNH_REDUCE_DIMENSIONS_IN_FILES = "1"
 
         NewFile.createDimension("X", self.nx)
         NewFile.createDimension("Y", self.ny)
