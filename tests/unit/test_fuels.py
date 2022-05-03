@@ -227,18 +227,18 @@ def test_fuel_db_dump(tmpdir, filename, iscompact):
     check_str = f"is_compact: {str(iscompact).lower()}\n"
     assert pathreal.readlines(cr=1)[1] == check_str
 
-@pytest.mark.parametrize("show_db_content",
-    [False, True]
-)
-def test_fuel_db_print(capsys, show_db_content):
-    my_db = pl.FuelDatabase()
-    my_db.list_avail_fuel_database(show_db_content=show_db_content)
-    captured = capsys.readouterr()
-    assert "----- pyrolib available database -----" in captured.out
-    assert "FireFluxI" in captured.out
-    assert "DefaultSA" in captured.out
-    assert "------ local available database -----" in captured.out
-    if show_db_content:
-        assert "< tall_grass >" in captured.out
-        assert "< default >" in captured.out
-        assert "BalbiFuel fuel class" in captured.out
+# @pytest.mark.parametrize("show_db_content",
+#     [False, True]
+# )
+# def test_fuel_db_print(capsys, show_db_content):
+#     my_db = pl.FuelDatabase()
+#     my_db.list_avail_fuel_database(show_db_content=show_db_content)
+#     captured = capsys.readouterr()
+#     assert "----- pyrolib available database -----" in captured.out
+#     assert "FireFluxI" in captured.out
+#     assert "DefaultSA" in captured.out
+#     assert "------ local available database -----" in captured.out
+#     if show_db_content:
+#         assert "< tall_grass >" in captured.out
+#         assert "< default >" in captured.out
+#         assert "BalbiFuel fuel class" in captured.out

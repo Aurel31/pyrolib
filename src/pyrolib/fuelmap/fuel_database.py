@@ -10,7 +10,6 @@ import yaml
 
 from .fuels import(
     BalbiFuel,
-    show_fuel_classes,
 )
 
 class FuelDatabase:
@@ -135,56 +134,6 @@ class FuelDatabase:
             yaml.dump({"is_compact": compact}, ymlfile)
             # save minimal dict of each fuel
             yaml.dump({"Fuels": dict_to_store}, ymlfile)
-
-    @staticmethod
-    def list_avail_fuel_database(show_db_content=True):
-        """List every scenario file in data/scenario directory
-        """
-        data_dir_content = pkg_resources.resource_listdir("pyrolib", "data/fuel_db")
-        data_dir_content.sort()
-        print("----- pyrolib available database -----")
-        for file in data_dir_content:
-            if file.endswith(".yml"):
-                print(f"  * {file.replace('.yml','')}")
-                if show_db_content:
-                    # print db fuels
-                    defaultpath = pkg_resources.resource_stream("pyrolib", "/".join(("data/fuel_db", file)))
-                    with open(defaultpath.name, "r") as ymlfile:
-                        alldata = yaml.safe_load(ymlfile)
-                    for fuel_description in alldata['fuels'].keys():
-                        print(f"    < {fuel_description} > available for:")
-                        for fuel_class in alldata['fuels'][fuel_description].keys():
-                            fuel_class = alldata['fuels'][fuel_description][fuel_class]["class"]
-                            print(f"      - {fuel_class} fuel class")
-                    print()
-
-        print("------ local available database -----")
-        data_dir_content = os.listdir()
-        data_dir_content.sort()
-        for file in data_dir_content:
-            if file.endswith(".yml"):
-                # load file
-                with open(file, "r") as ymlfile:
-                        alldata = yaml.safe_load(ymlfile)
-                # check if is_compact, infos, and fuels are in keys
-                if ("is_compact" in alldata.keys() and
-                    "infos" in alldata.keys() and
-                    "fuels" in alldata.keys()
-                    ):
-                    print(f"  * {file.replace('.yml','')}")
-                    if show_db_content:
-                        # print db fuels
-                        for fuel_description in alldata['fuels'].keys():
-                            print(f"    < {fuel_description} > available for:")
-                            for fuel_class in alldata['fuels'][fuel_description].keys():
-                                fuel_class = alldata['fuels'][fuel_description][fuel_class]["class"]
-                                print(f"      - {fuel_class} fuel class")
-                        print()
-        print("-------------------------------------")
-        if show_db_content:
-            show_fuel_classes(show_fuel_properties=False)
-        else:
-            print()
 
     def __str__(self) -> str:
         out = "---------- current database ---------\n"

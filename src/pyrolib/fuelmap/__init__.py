@@ -1,6 +1,5 @@
 from .fuels import (
     BalbiFuel,
-    show_fuel_classes,
 )
 from .fuelmap import (
     FuelMap,
