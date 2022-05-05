@@ -7,7 +7,7 @@ import pkg_resources
 import yaml
 import pyrolib
 
-from .fuelmap.fuels import(
+from .fuelmap.fuels import (
     _show_fuel_classes,
 )
 
@@ -20,12 +20,7 @@ def add_version(f):
     """
     doc = f.__doc__
     f.__doc__ = (
-        "Package "
-        + pyrolib.__name__
-        + " v"
-        + pyrolib.__version__
-        + "\n\n"
-        + doc
+        "Package " + pyrolib.__name__ + " v" + pyrolib.__version__ + "\n\n" + doc
     )
 
     return f
@@ -42,75 +37,73 @@ def main_cli():
 
 @click.command()
 @click.option(
-    "-s",
-    "--short",
-    is_flag=True,
-    default=True,
-    help='print database content'
+    "-s", "--short", is_flag=True, default=True, help="print database content"
 )
 def list_fuel_databases(short):
-        """List fuel databases available in pyrolib
-        """
-        data_dir_content = pkg_resources.resource_listdir("pyrolib", "data/fuel_db")
-        data_dir_content.sort()
-        print("----- pyrolib available database -----")
-        for file in data_dir_content:
-            if file.endswith(".yml"):
+    """List fuel databases available in pyrolib"""
+    data_dir_content = pkg_resources.resource_listdir("pyrolib", "data/fuel_db")
+    data_dir_content.sort()
+    print("----- pyrolib available database -----")
+    for file in data_dir_content:
+        if file.endswith(".yml"):
+            print(f"  * {file.replace('.yml','')}")
+            if short:
+                # print db fuels
+                defaultpath = pkg_resources.resource_stream(
+                    "pyrolib", "/".join(("data/fuel_db", file))
+                )
+                with open(defaultpath.name, "r") as ymlfile:
+                    alldata = yaml.safe_load(ymlfile)
+                for fuel_description in alldata["fuels"].keys():
+                    print(f"    < {fuel_description} > available for:")
+                    for fuel_class in alldata["fuels"][fuel_description].keys():
+                        fuel_class = alldata["fuels"][fuel_description][fuel_class][
+                            "class"
+                        ]
+                        print(f"      - {fuel_class} fuel class")
+                print()
+
+    print("------ local available database -----")
+    data_dir_content = os.listdir()
+    data_dir_content.sort()
+    for file in data_dir_content:
+        if file.endswith(".yml"):
+            # load file
+            with open(file, "r") as ymlfile:
+                alldata = yaml.safe_load(ymlfile)
+            # check if is_compact, infos, and fuels are in keys
+            if (
+                "is_compact" in alldata.keys()
+                and "infos" in alldata.keys()
+                and "fuels" in alldata.keys()
+            ):
                 print(f"  * {file.replace('.yml','')}")
                 if short:
                     # print db fuels
-                    defaultpath = pkg_resources.resource_stream("pyrolib", "/".join(("data/fuel_db", file)))
-                    with open(defaultpath.name, "r") as ymlfile:
-                        alldata = yaml.safe_load(ymlfile)
-                    for fuel_description in alldata['fuels'].keys():
+                    for fuel_description in alldata["fuels"].keys():
                         print(f"    < {fuel_description} > available for:")
-                        for fuel_class in alldata['fuels'][fuel_description].keys():
-                            fuel_class = alldata['fuels'][fuel_description][fuel_class]["class"]
+                        for fuel_class in alldata["fuels"][fuel_description].keys():
+                            fuel_class = alldata["fuels"][fuel_description][fuel_class][
+                                "class"
+                            ]
                             print(f"      - {fuel_class} fuel class")
                     print()
+    print("-------------------------------------")
+    if short:
+        _show_fuel_classes(show_fuel_properties=False)
+    else:
+        print()
 
-        print("------ local available database -----")
-        data_dir_content = os.listdir()
-        data_dir_content.sort()
-        for file in data_dir_content:
-            if file.endswith(".yml"):
-                # load file
-                with open(file, "r") as ymlfile:
-                        alldata = yaml.safe_load(ymlfile)
-                # check if is_compact, infos, and fuels are in keys
-                if ("is_compact" in alldata.keys() and
-                    "infos" in alldata.keys() and
-                    "fuels" in alldata.keys()
-                    ):
-                    print(f"  * {file.replace('.yml','')}")
-                    if short:
-                        # print db fuels
-                        for fuel_description in alldata['fuels'].keys():
-                            print(f"    < {fuel_description} > available for:")
-                            for fuel_class in alldata['fuels'][fuel_description].keys():
-                                fuel_class = alldata['fuels'][fuel_description][fuel_class]["class"]
-                                print(f"      - {fuel_class} fuel class")
-                        print()
-        print("-------------------------------------")
-        if short:
-            _show_fuel_classes(show_fuel_properties=False)
-        else:
-            print()
 
 main_cli.add_command(list_fuel_databases)
 
 
 @click.command()
 @click.option(
-    "-s",
-    "--short",
-    is_flag=True,
-    default=False,
-    help='show fuel classes attributs'
+    "-s", "--short", is_flag=True, default=False, help="show fuel classes attributs"
 )
 def list_fuel_classes(short):
-    """List fuel classes available in pyrolib and default parameters values
-    """
+    """List fuel classes available in pyrolib and default parameters values"""
     _show_fuel_classes(show_fuel_properties=not short)
 
 
