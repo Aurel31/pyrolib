@@ -1,0 +1,57 @@
+infos: some information about the db
+is_compact: true
+Fuels:
+  short_grass:
+    BalbiFuel:
+      class: BalbiFuel
+      properties:
+        DeltaH: 15430000.0
+        Deltah: 2300000.0
+        LAI: 4.0
+        Md: 0.1
+        Ml: 1.0
+        Ta: 300.0
+        Ti: 500
+        X0: 0.3
+        cp: 1912
+        cpa: 1004
+        e: 0.3
+        r00: 2.0e-05
+        rhoa: 1.2
+        rhod: 400
+        rhol: 400
+        sd: 5000
+        sigmad: 0.95
+        sigmal: 0.05
+        sl: 5000
+        slope: 0.0
+        stoch: 8.3
+        tau0: 75590
+        wind: 0.0
+  tall_grass:
+    BalbiFuel:
+      class: BalbiFuel
+      properties:
+        DeltaH: 15430000.0
+        Deltah: 2300000.0
+        LAI: 4.0
+        Md: 0.1
+        Ml: 1.0
+        Ta: 300.0
+        Ti: 500
+        X0: 0.3
+        cp: 1912
+        cpa: 1004
+        e: 0.3
+        r00: 2.0e-05
+        rhoa: 1.2
+        rhod: 400
+        rhol: 400
+        sd: 5000
+        sigmad: 0.95
+        sigmal: 0.05
+        sl: 5000
+        slope: 0.0
+        stoch: 8.3
+        tau0: 75590
+        wind: 0.0
