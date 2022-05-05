@@ -36,10 +36,18 @@ def main_cli():
 
 @click.command()
 @click.argument("files", nargs=-1)
-def rearrange_netcdf(files):
+@click.option(
+    "-r",
+    "--remove",
+    is_flag=True,
+    default=False,
+    help='remove original file'
+)
+def rearrange_netcdf(files, remove):
     """Rearrange netcdf with fire fields"""
     for file in files:
         if file.endswith(".nc"):
+            print(f"> rearrange {file}")
             new_filename = file.replace(".nc", "") + "-post.nc"
             with Dataset(file, "r") as src, Dataset(f"{new_filename}", "w") as dst:
                 # copy attributes
@@ -114,7 +122,6 @@ def rearrange_netcdf(files):
                     nf[:] = YFire[:]
                 # copy all file data except for the excluded
                 for name, variable in src.variables.items():
-                    print(name)
                     # check fill_value
                     fill_value = (
                         variable.getncattr("_FillValue")
@@ -152,7 +159,10 @@ def rearrange_netcdf(files):
                         if key not in ["_FillValue"]:
                             dst.variables[name].setncattr(key, value)
 
-
+            # remove source file if needed
+            if remove:
+                os.remove(file)
+                print(f">> {file} removed")
         else:
             print(f"< {file} > unknown file format. Ignored")
             continue
