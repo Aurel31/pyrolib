@@ -48,12 +48,12 @@ class FuelProperty:
         """
         self.value = float(value)
 
-    def show(self):
+    def __str__(self) -> str:
         """Print formatted property information.
         The following format is used:
         Property `name` = `value` [`Unit`] as `description`
         """
-        print(f"Property {self.name:>7s} = {self.value:5.3e} [{self.unit:<6s}] as {self.description:s}")
+        return f"Property {self.name:>7s} = {self.value:5.3e} [{self.unit:<6s}] as {self.description:s}"
 
     def minimal_dict(self):
         """| Construct the minimal dictionnary of the class.
@@ -115,15 +115,17 @@ class BaseFuel(ABC):
             if paramtochange in FuelProperties.keys():
                 FuelProperties[paramtochange].set(opts[paramtochange])
 
-    def print_parameters(self):
+    def __str__(self) -> str:
         """Show every property of the fuel.
 
         List every property of the fuel class and display according to the format of the
         :func:`~pyrolib.fuels.FuelProperty.show` method in the
         :class:`~pyrolib.fuels.FuelProperty` class.
         """
+        out = f"{type(self).__name__} properties:\n"
         for param in vars(self).values():
-            param.show()
+            out += f"  {param.__str__()}\n"
+        return out
 
     def copy_from_sequence(self, sequence, index):
         """| Copy fuel with changes from given sequence containing properties ensemble.
@@ -433,5 +435,5 @@ def _show_fuel_classes(show_fuel_properties=True):
     print(f"  It is used when < CPROPAG_MODEL = SANTONI2011 > in the Méso-NH namelist.")
     if show_fuel_properties:
         print("It contains the following properties with default value:")
-        BalbiFuel().print_parameters()
+        print(BalbiFuel())
     print()

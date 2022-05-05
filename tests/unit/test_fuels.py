@@ -26,7 +26,7 @@ def test_property_set():
 
 def test_property_show(capsys):
     fuelproperty = FuelProperty("test", 0., "-", "none", propertyindex=None)
-    fuelproperty.show()
+    print(fuelproperty)
     captured = capsys.readouterr()
     assert captured.out == "Property    test = 0.000e+00 [-     ] as none\n"
 
