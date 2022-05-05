@@ -1,0 +1,99 @@
+infos: Fuel parameters used in A. Costes PhD Thesis SA study (2021)
+is_compact: false
+fuels:
+  default:
+    BalbiFuel:
+      class: BalbiFuel
+      properties:
+        DeltaH:
+          Description: Combustion enthalpy
+          Unit: J/kg
+          Value: 15430000.0
+        Deltah:
+          Description: Water evaporation enthalpy
+          Unit: J/kg
+          Value: 2500000.0
+        LAI:
+          Description: Leaf area index
+          Unit: '-'
+          Value: 4.0
+        Md:
+          Description: Dead fuel moisture
+          Unit: '-'
+          Value: 0.1
+        Ml:
+          Description: Living fuel moisture
+          Unit: '-'
+          Value: 0.8
+        Rhoa:
+          Description: Air density
+          Unit: kg/m3
+          Value: 1.2
+        Rhod:
+          Description: Dead fuel density
+          Unit: kg/m3
+          Value: 400
+        Rhol:
+          Description: Living fuel density
+          Unit: kg/m3
+          Value: 400
+        Sigmad:
+          Description: Dead fuel load
+          Unit: kg/m2
+          Value: 1.0
+        Sigmal:
+          Description: Living fuel load
+          Unit: kg/m2
+          Value: 0.1
+        Slope:
+          Description: Slope
+          Unit: deg
+          Value: 0.0
+        Ta:
+          Description: Air temperature
+          Unit: K
+          Value: 300.0
+        Tau0:
+          Description: '?'
+          Unit: s/m
+          Value: 75590
+        Ti:
+          Description: Ignition temperature
+          Unit: K
+          Value: 500
+        Wind:
+          Description: Wind at mid-flame
+          Unit: m/s
+          Value: 0.0
+        X0:
+          Description: Fraction of radiant energy
+          Unit: '-'
+          Value: 0.3
+        cp:
+          Description: Fuel calorific capacity
+          Unit: J/K/kg
+          Value: 1912.0
+        cpa:
+          Description: Air calorific capacity
+          Unit: J/K/kg
+          Value: 1004.0
+        e:
+          Description: Fuel height
+          Unit: m
+          Value: 1.5
+        r00:
+          Description: '?'
+          Unit: '?'
+          Value: 2.0e-05
+        sd:
+          Description: Dead SAV ratio
+          Unit: /m
+          Value: 5000
+        sl:
+          Description: Living SAV ratio
+          Unit: /m
+          Value: 5000
+        stoch:
+          Description: Stochiometry
+          Unit: '-'
+          Value: 8.3
