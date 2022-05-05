@@ -25,13 +25,28 @@ pip install pyrolib
 
 `pyrolib` is separated into several sub-libraries for each of the objectives mentioned above, respectively:
 
-- `pyrolib.fuels`
+- `pyrolib.fuelmap`
 - `pyrolib.firefluxpost`
 - `pyrolib.blaze`
 
-## How to
+### Fuel database
 
-### `FuelMap.nc` file generation
+`pyrolib` relies on a fuel container object called a `FuelDatabase`.
+A `FuelDatabase` is a 2 level nested dictionary-like class. The first level corresponds to an explicit fuel name (like "tall_grass"). This fuel can be described by several methods that are related to a rate of spread model (for example `Rothermel` or `Balbi`). Each description is relatde to a `Fuel class` (`RothermelFuel` or `BalbiFuel`) are constitute the second level of the database.
+
+The
+ `FireFluxI` `FuelDatabase` contains for example the following:
+```
+* FireFluxI
+    < tall_grass > available for:
+      - BalbiFuel fuel class
+```
+
+The list of `FuelDatabase` contained in `pyrolib` can be accessed through the cli `pyrolib-fm list-fuel-databases`.
+
+A user database can be saved in a `.yml` file. See example `examples/fuel_database`.
+## How to
+### generate the `FuelMap.nc` file
 
 The objective of this part is to easily create a fuel file for a `Méso-NH/Blaze` run.
 This file is always named `FuelMap.nc`. It needs to contain a 2D map on the fire grid for the following fields :
@@ -41,7 +56,7 @@ This file is always named `FuelMap.nc`. It needs to contain a 2D map on the fire
 - ignition time,
 - walking ignition time.
 
-`pyrolib.fuels` provides tools for the generation of every `Fuelmap.nc` component.
+`pyrolib.fuelmap` provides tools for the generation of every `Fuelmap.nc` component.
 Some `Méso-NH` files are needed to complete the process. A typical `Méso-NH` run directory should look like
 
 ```
@@ -64,29 +79,29 @@ As the rate of spread model defined in the `Méso-NH` namelist, the `BalbiFuel` 
 
 ```python
 """simplecase.py
+
+Use an existing fuel database and create a simple fuelmap
 """
-import pyrolib.fuels as pl
+from pyrolib.fuelmap import FuelDatabase, FuelMap
 
-# create default Balbi fuel
-fuel1 = pl.BalbiFuel()
+# create fuel db
+my_db = FuelDatabase()
 
-# create a scenario to store fuel
-scenario = pl.Scenario(
-    name='test',
-    longname='test scenario',
-    infos='This is a test scenario',
-    )
-scenario.add_fuel(fuel1)
+# load existing database
+my_db.load_fuel_database("FireFluxI")
 
-# Create FuelMap
-fuelmap = pl.FuelMap(scenario=scenario)
+# create a FuelMap
+my_fuelmap = FuelMap(fuel_db=my_db)
 
-# add fuel patch and ignition patch
-fuelmap.addRectanglePatch(xpos=[50, 450], ypos=[50, 450], fuelindex=1)
-fuelmap.addRectanglePatch(xpos=[100, 105], ypos=[245, 255], ignitiontime=10)
+# add a fuel patch of the tall grass fuel from the FireFluxI database
+## to show the available fuel keys of the database, use print(my_db)
+my_fuelmap.add_fuel_rectangle_patch(xpos=[50, 450], ypos=[50, 450], fuel_key="FireFluxI_tall_grass")
 
-# write FuelMap.nc file and create FuelMap.des
-fuelmap.write(save2dfile=True)
+# add a ignition patch
+my_fuelmap.add_ignition_rectangle_patch(xpos=[100, 105], ypos=[245, 255], ignition_time=10)
+
+# dump for mesonh
+my_fuelmap.dump_mesonh()
 ```
 
 After running the script, the directory should contains:
@@ -124,57 +139,6 @@ fuel3 = fuel2.copy(DeltaH=20e7, LAI=2)
 
 # change property value after creation
 fuel1.Ml.set(0.9)
-```
-### Manage scenario
-
-`pyrolib` relies on a fuel container object called a `scenario`.
-It can contains several `fuels` type objects, that can be stored in `.yml` files and retrieved from `.yml` files.
-If no filepath is given to `save` method, it saves the scenario locally with its own name `scenario.name`.
-Several scenrio are already available in the library database.
-To show the list of available scenario, use `show_default_scenario` function.
-
-Load a scenario file by using `load` argument with the filename in the constructor.
-The filename can be either a local file or a default file present in the `pyrolib` database.
-
-```python
-import pyrolib.fuels as pl
-
-# verbose level
-# 0: only fuel name
-# 1: name + ROS
-# 2: name + ROS + every property value
-verbose_level = 2
-
-# create some fuels
-fuel1 = pl.BalbiFuel()
-fuel2 = pl.BalbiFuel(e=2., Md=0.15)
-
-# create a scenario
-scenario = pl.Scenario(
-    name='scenario',
-    longname='testscenario',
-    infos='This is a test scenario'
-    )
-
-# add fuels to scenario
-scenario.add_fuels(fuel1, fuel2)
-
-# show fuels and no wind/no slope ROS contained in the scenario
-scenario.show(verbose=verbose_level)
-
-# save scenario in yml file
-scenario.save()
-
-# Create a scenario from existing local file (scenario.yml)
-new_scenario = pl.Scenario(load='scenario')
-new_scenario.show(verbose=verbose_level)
-
-# Show available default scenario
-pl.show_default_scenario()
-
-# Create a scenario from a default file
-scenario_from_default = pl.Scenario(load='FireFluxI')
-scenario_from_default.show(verbose=verbose_level)
 ```
 
 ## `Méso-NH` compliance
