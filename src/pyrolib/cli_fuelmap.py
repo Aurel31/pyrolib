@@ -48,8 +48,8 @@ def main_cli():
     default=True,
     help='print database content'
 )
-def list_avail_fuel_database(short):
-        """List fuel database available in pyrolib package
+def list_fuel_databases(short):
+        """List fuel databases available in pyrolib
         """
         data_dir_content = pkg_resources.resource_listdir("pyrolib", "data/fuel_db")
         data_dir_content.sort()
@@ -97,7 +97,7 @@ def list_avail_fuel_database(short):
         else:
             print()
 
-main_cli.add_command(list_avail_fuel_database)
+main_cli.add_command(list_fuel_databases)
 
 
 @click.command()
@@ -109,7 +109,7 @@ main_cli.add_command(list_avail_fuel_database)
     help='show fuel classes attributs'
 )
 def list_fuel_classes(short):
-    """Print fuel classes available in pyrolib and default parameters values
+    """List fuel classes available in pyrolib and default parameters values
     """
     _show_fuel_classes(show_fuel_properties=not short)
 
