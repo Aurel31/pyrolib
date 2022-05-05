@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] 2022 / 05 / 05
+
+### Added
+- `FuelDatabase` class to replace the `Scenario` class
+- Fuel descriptor is used to access fuel in the database instead of index
+- cli for fuelmap (list fuel databases and fuel classes)
+- cli for postprocessing (rearrange netcdf file to store fire fields in 2D instead of 3D)
+### Changed
+- all add_patch functions have been splitted into more explicit functions.
+  For example: `addRectanglePatch` has been splitted to `add_fuel_rectangle_patch`, `add_unburnable_rectangle_patch`, and `add_ignition_rectangle_patch`.
+- Update examples
+- use __str__ instead of show methods for `FuelProperty` and `BaseFuel`.
+### Deleted
+- `Scenario` class is not used anymore
+
 ## [0.1.2] 2022 / 03 / 02
 
 ### Added
