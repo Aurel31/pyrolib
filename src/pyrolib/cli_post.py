@@ -75,6 +75,8 @@ def rearrange_netcdf(files):
                         .split(",")[1]
                         .replace(")", "")
                     )
+                    gamma_x = 5
+                    gamma_y = 5
                     # fire grid size
                     Lmax = gamma_x * len(grid_u_x)
                     Mmax = gamma_y * len(grid_v_y)
