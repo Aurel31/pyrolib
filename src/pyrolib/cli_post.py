@@ -7,7 +7,8 @@ import click
 import numpy as np
 from netCDF4 import Dataset
 
-import pyrolib
+from pyrolib import __name__ as pyrolib_name
+from pyrolib import __version__ as pyrolib_version
 from pyrolib.fuelmap.utility import fire_array_3d_to_2d
 
 
@@ -19,7 +20,7 @@ def add_version(f):
     """
     doc = f.__doc__
     f.__doc__ = (
-        "Package " + pyrolib.__name__ + " v" + pyrolib.__version__ + "\n\n" + doc
+        "Package " + pyrolib_name + " v" + pyrolib_version + "\n\n" + doc
     )
 
     return f

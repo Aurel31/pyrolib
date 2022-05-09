@@ -2,14 +2,15 @@
 """
 
 import os
+
 import click
 import pkg_resources
 import yaml
-import pyrolib
 
-from .fuelmap.fuels import (
-    _show_fuel_classes,
-)
+from pyrolib import __name__ as pyrolib_name
+from pyrolib import __version__ as pyrolib_version
+
+from .fuelmap.fuels import _show_fuel_classes
 
 
 def add_version(f):
@@ -20,7 +21,7 @@ def add_version(f):
     """
     doc = f.__doc__
     f.__doc__ = (
-        "Package " + pyrolib.__name__ + " v" + pyrolib.__version__ + "\n\n" + doc
+        "Package " + pyrolib_name + " v" + pyrolib_version + "\n\n" + doc
     )
 
     return f
