@@ -133,7 +133,7 @@ class FuelDatabase:
             yaml.dump({"infos": info}, ymlfile)
             yaml.dump({"is_compact": compact}, ymlfile)
             # save minimal dict of each fuel
-            yaml.dump({"Fuels": dict_to_store}, ymlfile)
+            yaml.dump({"fuels": dict_to_store}, ymlfile)
 
     def __str__(self) -> str:
         out = "---------- current database ---------\n"
