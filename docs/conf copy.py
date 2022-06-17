@@ -15,14 +15,14 @@
 import os
 import sys
 import shutil
-from pyrolib import __version__ as pyrover
+from lemmings import __version__ as lemver
 #import sphinx_rtd_theme
 #import recommonmark
 
 # -- Project information -----------------------------------------------------
-project = "pyrolib"
-copyright = "2022, Aurélien Costes"
-author = "Aurélien Costes"
+project = "lemmings"
+copyright = "Team COOP"
+author = "Team COOP"
 
 sys.path.insert(0, os.path.abspath("../src/" + project))
 
@@ -36,7 +36,7 @@ def _copy_changelog():
     shutil.copy('../CHANGELOG.md', './changelog_copy.md')
 
 def _get_version():
-    ver = pyrover
+    ver = lemver
     ver_split = [key for key in ver.split(".") if key]
     if len(ver_split) >= 3:
         release = ".".join(ver.split(".")[:3])
@@ -68,7 +68,6 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
     "recommonmark",
-    'aafigure.sphinxext',
     #    'rst2pdf.pdfbuilder', Necessary for PDF rendering
 ]
 
@@ -115,7 +114,7 @@ html_theme = "sphinx_rtd_theme"
 # html_theme_options = {}
 
 html_show_sourcelink = False
-html_logo = "./_images/logo.png"
+html_logo = "./_images/logo_project.gif"
 html_favicon = "./_images/favicon.ico"
 html_title = "Template module Documentation"
 html_short_title = "Template Module"

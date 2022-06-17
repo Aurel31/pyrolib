@@ -1,19 +1,26 @@
-.. pyrolib documentation master file, created by
-   sphinx-quickstart on Tue Jan 25 20:12:14 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. _header-n0:
 
-Welcome to pyrolib's documentation!
-===================================
+.. documentation master file
+
+
+.. image:: pyrolib.png
+  :width: 400
+  :alt: Pyroliblogo
+
+*Welcome to the pyrolib documentation.*
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+  :maxdepth: 4
 
-   modules
+  readme_copy
+  redirect.rst
+  changelog_copy
 
-Indices and tables
-==================
+.. _header-n3:
+Pyrolib documentation
+=====================
+
+
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -1,0 +1,3 @@
+rm -rf api
+sphinx-apidoc ../src/pyrolib -o ./api --module-first  --no-toc
+make html
