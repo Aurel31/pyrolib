@@ -3,10 +3,6 @@
 .. documentation master file
 
 
-.. image:: pyrolib.png
-  :width: 400
-  :alt: Pyroliblogo
-
 *Welcome to the pyrolib documentation.*
 
 .. toctree::
@@ -17,6 +13,7 @@
   changelog_copy
 
 .. _header-n3:
+
 Pyrolib documentation
 =====================
 
