@@ -1,7 +1,7 @@
 __author__ = "Aurélien Costes"
 __credits__ = ["Aurélien Costes"]
 __license__ = "MIT"
-__version__ = "0.2.3a"
+__version__ = "0.2.3"
 __maintainer__ = "Aurélien Costes"
 __email__ = "aurelien.costes31@gmail.com"
 
