@@ -64,7 +64,7 @@ def list_fuel_databases(short):
                         print(f"      - {fuel_class} fuel class")
                 print()
 
-    print("------ local available database -----")
+    print("------ local available database ------")
     data_dir_content = os.listdir()
     data_dir_content.sort()
     for file in data_dir_content:
@@ -89,7 +89,7 @@ def list_fuel_databases(short):
                             ]
                             print(f"      - {fuel_class} fuel class")
                     print()
-    print("-------------------------------------")
+    print("--------------------------------------")
     if short:
         _show_fuel_classes(show_fuel_properties=False)
     else:
