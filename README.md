@@ -1,7 +1,7 @@
-![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/Aurel31/pyrolib?style=for-the-badge)
-[![GitHub issues](https://img.shields.io/github/issues/Aurel31/pyrolib?style=for-the-badge)](https://github.com/Aurel31/pyrolib/issues)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/Aurel31/pyrolib)
+[![GitHub issues](https://img.shields.io/github/issues/Aurel31/pyrolib)](https://github.com/Aurel31/pyrolib/issues)
 [![Documentation Status](https://readthedocs.org/projects/pyrolib/badge/?version=latest)](https://pyrolib.readthedocs.io/en/latest/?badge=latest)
-[![GitHub license](https://img.shields.io/github/license/Aurel31/pyrolib?style=for-the-badge)](https://github.com/Aurel31/pyrolib/blob/main/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/Aurel31/pyrolib)](https://github.com/Aurel31/pyrolib/blob/main/LICENSE)
 
 
 # `pyrolib`
