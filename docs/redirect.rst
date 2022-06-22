@@ -9,6 +9,7 @@ Read this to learn by examples.
 
     ./howto/create_fuel
     ./howto/generate_fuelmap
+    ./howto/use_cli
 
 References
 ==========

@@ -33,11 +33,9 @@ pip install pyrolib
 
 ### Fuel database
 
-`pyrolib` relies on a fuel container object called a `FuelDatabase`.
-A `FuelDatabase` is a 2 level nested dictionary-like class. The first level corresponds to an explicit fuel name (like "tall_grass"). This fuel can be described by several methods that are related to a rate of spread model (for example `Rothermel` or `Balbi`). Each description is relatde to a `Fuel class` (`RothermelFuel` or `BalbiFuel`) are constitute the second level of the database.
+`pyrolib` relies on a fuel container object called a `FuelDatabase`. A `FuelDatabase` is a 2 level nested dictionary-like class. The first level corresponds to an explicit fuel name (like "tall_grass"). This fuel can be described by several methods that are related to a rate of spread model (for example `Rothermel` or `Balbi`). Each description is related to a `Fuel class` (`RothermelFuel` or `BalbiFuel`) and constitutes the second level of the database.
 
-The
- `FireFluxI` `FuelDatabase` contains for example the following:
+The`FireFluxI` `FuelDatabase` contains for example the following:
 ```
 * FireFluxI
     < tall_grass > available for:
