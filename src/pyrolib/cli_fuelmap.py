@@ -101,7 +101,7 @@ main_cli.add_command(list_fuel_databases)
 
 @click.command()
 @click.option(
-    "-s", "--short", is_flag=True, default=False, help="show fuel classes attributs"
+    "-s", "--short", is_flag=True, default=False, help="do not show fuel classes attributs"
 )
 def list_fuel_classes(short):
     """List fuel classes available in pyrolib and default parameters values"""
