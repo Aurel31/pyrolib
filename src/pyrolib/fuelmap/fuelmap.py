@@ -783,7 +783,7 @@ class FuelMap:
         FuelMap.standard_name = "Fuel01"
         FuelMap.long_name = "Fuel type"
         FuelMap.comment = "Fuel type"
-        FuelMap.units = ""
+        FuelMap.units = "-"
         FuelMap.grid = np.intc(4)
         FuelMap[:, :, :] = fire_array_2d_to_3d(self.fuelmaparray[0, :, :], self.nx, self.ny, self.nrefinx, self.nrefiny)
 
@@ -794,8 +794,10 @@ class FuelMap:
         for propertyname in vars(chosen_fuel_class):
             propertyobj = getattr(chosen_fuel_class, propertyname)
             if propertyobj.propertyindex is not None:
-                FuelMap = NewFile.createVariable(f"Fuel{propertyobj.propertyindex + 1:02d}", np.float64, ("F", "Y", "X"))
-                FuelMap.standard_name = propertyobj.name
+                fuelname = f"Fuel{propertyobj.propertyindex + 1:02d}"
+                FuelMap = NewFile.createVariable(fuelname, np.float64, ("F", "Y", "X"))
+                FuelMap.standard_name = fuelname
+                FuelMap.long_name = propertyobj.name
                 FuelMap.comment = propertyobj.description
                 FuelMap.units = propertyobj.unit
                 FuelMap.grid = np.intc(4)
@@ -938,7 +940,7 @@ class FuelMap:
         FuelMap.long_name = "Fuel type"
         FuelMap.comment = "Fuel type"
         FuelMap.grid = np.intc(4)
-        FuelMap.units = ""
+        FuelMap.units = "-"
         FuelMap[:, :] = self.fuelmaparray[0, :, :]
 
         # Write each fuel as 3d table
