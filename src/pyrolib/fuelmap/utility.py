@@ -163,9 +163,13 @@ def convert_lon_lat_to_x_y(confproj: dict, lat: tuple, lon: tuple):
         ]
         y = [
             y_ori
-            - earth_radius * cosd(confproj["lat0"]) * np.log2(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(lat[0])))),
+            - earth_radius
+            * cosd(confproj["lat0"])
+            * np.log2(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(lat[0])))),
             y_ori
-            - earth_radius * cosd(confproj["lat0"]) * np.log2(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(lat[1])))),
+            - earth_radius
+            * cosd(confproj["lat0"])
+            * np.log2(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(lat[1])))),
         ]
 
         return x, y
