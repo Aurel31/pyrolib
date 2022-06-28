@@ -8,9 +8,10 @@ import errno
 import pkg_resources
 import yaml
 
-from .fuels import(
+from .fuels import (
     BalbiFuel,
 )
+
 
 class FuelDatabase:
     def __init__(self):
@@ -27,7 +28,7 @@ class FuelDatabase:
         # check file name
         if filename.endswith(".yml"):
             fname = filename
-            db_name = filename.replace('.yml','')
+            db_name = filename.replace(".yml", "")
         else:
             fname = filename + ".yml"
             db_name = filename
@@ -45,7 +46,9 @@ class FuelDatabase:
         # Select path
         if defaultexists:
             if localexists:
-                print(f"INFO : pyrolib fuel database and local fuel database found with same name <{fname}>\nLocal fuel database loaded")
+                print(
+                    f"INFO : pyrolib fuel database and local fuel database found with same name <{fname}>\nLocal fuel database loaded"
+                )
                 FilePath = fname
             else:
                 print(f"INFO : pyrolib fuel database <{fname}> loaded")
@@ -55,14 +58,16 @@ class FuelDatabase:
                 print(f"INFO : Local fuel database <{fname}> loaded")
                 FilePath = fname
             else:
-                print(f"ERROR : database <{fname}> not found in pyrolib fuel database directory nor local directory")
+                print(
+                    f"ERROR : database <{fname}> not found in pyrolib fuel database directory nor local directory"
+                )
                 FilePath = fname
                 raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), fname)
 
         # load new fuels
         with open(FilePath, "r") as ymlfile:
             alldata = yaml.safe_load(ymlfile)
-            if ("fuels" in alldata.keys() and "is_compact" in alldata.keys()):
+            if "fuels" in alldata.keys() and "is_compact" in alldata.keys():
                 if alldata["is_compact"]:
                     # read in compact mode
                     for fuel_description in alldata["fuels"].keys():
@@ -71,11 +76,8 @@ class FuelDatabase:
                         for fuel in alldata["fuels"][fuel_description].keys():
                             # add a new fuel object to the fuel dict
                             fuel_dict[fuel] = getattr(
-                                sys.modules[__name__],
-                                alldata["fuels"][fuel_description][fuel]["class"]
-                                )(
-                                **alldata["fuels"][fuel_description][fuel]["properties"]
-                            )
+                                sys.modules[__name__], alldata["fuels"][fuel_description][fuel]["class"]
+                            )(**alldata["fuels"][fuel_description][fuel]["properties"])
 
                         # add the fuel dict to the current db
                         self.fuels[fuel_db_key] = fuel_dict
@@ -88,20 +90,21 @@ class FuelDatabase:
                             # need to reconstruct properties dictionnary
                             propertiesdict = {}
                             for prop in alldata["fuels"][fuel_description][fuel]["properties"].keys():
-                                propertiesdict[prop] = alldata["fuels"][fuel_description][fuel]["properties"][prop]["Value"]
+                                propertiesdict[prop] = alldata["fuels"][fuel_description][fuel][
+                                    "properties"
+                                ][prop]["Value"]
 
                             # add a new fuel object to the fuel dict
                             fuel_dict[fuel] = getattr(
-                                sys.modules[__name__],
-                                alldata["fuels"][fuel_description][fuel]["class"]
-                                )(
-                                **propertiesdict
-                            )
+                                sys.modules[__name__], alldata["fuels"][fuel_description][fuel]["class"]
+                            )(**propertiesdict)
 
                         # add the fuel dict to the current db
                         self.fuels[fuel_db_key] = fuel_dict
             else:
-                print("ERROR : cannot find fuels or compacity variable: <is_compact> in file. Reading stopped.")
+                print(
+                    "ERROR : cannot find fuels or compacity variable: <is_compact> in file. Reading stopped."
+                )
 
     def dump_database(self, filename, info, compact=True):
         """save the current fuel database in a yml file.
@@ -125,7 +128,9 @@ class FuelDatabase:
             # iterate on fuel classes
             minimal_dict_of_fuels = {}
             for fuel in self.fuels[fuel_description].keys():
-                minimal_dict_of_fuels[type(self.fuels[fuel_description][fuel]).__name__] = self.fuels[fuel_description][fuel].minimal_dict(compact=compact)
+                minimal_dict_of_fuels[type(self.fuels[fuel_description][fuel]).__name__] = self.fuels[
+                    fuel_description
+                ][fuel].minimal_dict(compact=compact)
             # add to dict to store
             dict_to_store[fuel_description] = minimal_dict_of_fuels
         #

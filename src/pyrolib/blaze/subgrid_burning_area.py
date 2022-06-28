@@ -34,7 +34,9 @@ def SGBA_WA(phi, nx, ny):
             S[j, i] = (
                 9.0 / 16.0 * phi[j, i]
                 + 3.0 / 32.0 * (phi[j, i - 1] + phi[j - 1, i] + phi[j, i + 1] + phi[j + 1, i])
-                + 1.0 / 64.0 * (phi[j - 1, i - 1] + phi[j - 1, i + 1] + phi[j + 1, i - 1] + phi[j + 1, i + 1])
+                + 1.0
+                / 64.0
+                * (phi[j - 1, i - 1] + phi[j - 1, i + 1] + phi[j + 1, i - 1] + phi[j + 1, i + 1])
             )
 
     return S
