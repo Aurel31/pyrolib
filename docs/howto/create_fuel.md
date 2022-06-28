@@ -20,3 +20,5 @@ fuel3 = fuel2.copy(DeltaH=20e7, LAI=2)
 # change property value after creation
 fuel1.Ml.set(0.9)
 ```
+
+test
