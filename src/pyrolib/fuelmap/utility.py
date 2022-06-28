@@ -21,6 +21,10 @@ def njit_wrapper(function):
         return function
 
 
+sind = lambda degrees: np.sin(np.deg2rad(degrees))
+cosd = lambda degrees: np.cos(np.deg2rad(degrees))
+
+
 @njit_wrapper
 def fill_fuel_array_from_patch(fuelarray, patchmask, propertyvector, np, nx, ny):
     """Fill fuel array considering a mask
@@ -128,3 +132,42 @@ def fire_array_3d_to_2d(firearray3d, nx, ny, gammax, gammay):
                 l = (i - 1) * gammax + a
                 farray2d[m - 1, l - 1] = firearray3d[k - 1, j - 1, i - 1]
     return farray2d
+
+
+def convert_lon_lat_to_x_y(confproj: dict, lat: tuple, lon: tuple):
+    """Convert a point (lon, lat) into (x,y)
+
+    Args:
+        confproj : dict
+            conformal projection parameters
+        lat : tuple
+            latitude position (deg)
+        lon : tuple
+            longitude position (deg)
+    """
+    earth_radius = 6371229.0  # from ini_cst.f90, MNH 5.5.0
+
+    # get position of origin (x_ori, y_ori)
+    if np.isclose(confproj["beta"], 0.0) and np.isclose(confproj["k"], 0.0):
+        # Mercator projection without rotation
+        x_ori = -earth_radius * cosd(confproj["lat0"]) * np.deg2rad(confproj["lon_ori"] - confproj["lon0"])
+        y_ori = (
+            earth_radius
+            * cosd(confproj["lat0"])
+            * np.log2(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(confproj["lat_ori"]))))
+        )
+
+        x = [
+            x_ori + earth_radius * cosd(confproj["lat0"]) * np.deg2rad(lon[0] - confproj["lon0"]),
+            x_ori + earth_radius * cosd(confproj["lat0"]) * np.deg2rad(lon[1] - confproj["lon0"]),
+        ]
+        y = [
+            y_ori
+            - earth_radius * cosd(confproj["lat0"]) * np.log2(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(lat[0])))),
+            y_ori
+            - earth_radius * cosd(confproj["lat0"]) * np.log2(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(lat[1])))),
+        ]
+
+        return x, y
+    else:
+        raise NotImplementedError

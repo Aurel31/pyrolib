@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.3.0] To be released
 
+
+### Added
+- conformal projection utility for Mercator without rotation
+- tests for conformal projection utility
+### Changed
+- attributes of FuelMap.nc updated to be compliant with MesoNH 5.5.0 reader.
 ## [0.2.3] 2022 / 06 / 21
 
 ### Doc

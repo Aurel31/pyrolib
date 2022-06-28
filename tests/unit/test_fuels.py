@@ -5,52 +5,76 @@ import pytest
 
 import pyrolib.fuelmap as pl
 from pyrolib.fuelmap.fuels import FuelProperty
+from pyrolib.fuelmap.utility import convert_lon_lat_to_x_y
+from numpy import isclose
 
 """
 Parameter
 """
+
+
 def test_property_init():
-    fuelproperty = FuelProperty("test", 0., "-", "none", propertyindex=None)
+    fuelproperty = FuelProperty("test", 0.0, "-", "none", propertyindex=None)
     assert fuelproperty.name == "test"
-    assert fuelproperty.value == 0.
+    assert fuelproperty.value == 0.0
     assert fuelproperty.unit == "-"
     assert fuelproperty.description == "none"
     assert fuelproperty.propertyindex == None
 
 
 def test_property_set():
-    fuelproperty = FuelProperty("test", 0., "-", "none", propertyindex=None)
-    fuelproperty.set(1.)
-    assert fuelproperty.value == 1.
+    fuelproperty = FuelProperty("test", 0.0, "-", "none", propertyindex=None)
+    fuelproperty.set(1.0)
+    assert fuelproperty.value == 1.0
 
 
 def test_property_show(capsys):
-    fuelproperty = FuelProperty("test", 0., "-", "none", propertyindex=None)
+    fuelproperty = FuelProperty("test", 0.0, "-", "none", propertyindex=None)
     print(fuelproperty)
     captured = capsys.readouterr()
     assert captured.out == "Property    test = 0.000e+00 [-     ] as none\n"
 
 
 def test_property_minimal_dict():
-    fuelproperty = FuelProperty("test", 0., "-", "none", propertyindex=None)
+    fuelproperty = FuelProperty("test", 0.0, "-", "none", propertyindex=None)
     mdict = fuelproperty.minimal_dict()
     assert mdict["description"] == "none"
     assert mdict["unit"] == "-"
-    assert mdict["value"] == 0.
+    assert mdict["value"] == 0.0
 
 
 """
 Balbi Fuel
 """
 
-@pytest.mark.parametrize("property,default_value,property_index",
-    [("rhod", 400, 1),     ("rhol", 400, 2),    ("Md", 0.1, 3),      ("Ml", 1., 4),
-    ("sd", 5000, 5),       ("sl", 5000, 6),     ("sigmad", 0.95, 7), ("sigmal", 0.05, 8),
-    ("e", 1., 9),          ("Ti", 500, 10),     ("Ta", 300., 11),    ("DeltaH", 15.43e6, 12),
-    ("Deltah", 2.3e6, 13), ("tau0", 75590, 14), ("stoch", 8.3, 15),  ("rhoa", 1.2, 16),
-    ("cp", 1912, 17),      ("cpa", 1004, 18),   ("X0", 0.3, 19),     ("LAI", 4., 20),
-    ("r00", 2e-5, 21),     ("wind", 0., None),  ("slope", 0., None),
-    ]
+
+@pytest.mark.parametrize(
+    "property,default_value,property_index",
+    [
+        ("rhod", 400, 1),
+        ("rhol", 400, 2),
+        ("Md", 0.1, 3),
+        ("Ml", 1.0, 4),
+        ("sd", 5000, 5),
+        ("sl", 5000, 6),
+        ("sigmad", 0.95, 7),
+        ("sigmal", 0.05, 8),
+        ("e", 1.0, 9),
+        ("Ti", 500, 10),
+        ("Ta", 300.0, 11),
+        ("DeltaH", 15.43e6, 12),
+        ("Deltah", 2.3e6, 13),
+        ("tau0", 75590, 14),
+        ("stoch", 8.3, 15),
+        ("rhoa", 1.2, 16),
+        ("cp", 1912, 17),
+        ("cpa", 1004, 18),
+        ("X0", 0.3, 19),
+        ("LAI", 4.0, 20),
+        ("r00", 2e-5, 21),
+        ("wind", 0.0, None),
+        ("slope", 0.0, None),
+    ],
 )
 def test_BalbiFuel_init(property, default_value, property_index):
     fuel = pl.BalbiFuel()
@@ -62,15 +86,15 @@ def test_BalbiFuel_init(property, default_value, property_index):
 
 
 def test_BalbiFuel_value_change():
-    fuel = pl.BalbiFuel(e=2.)
-    assert fuel.e.value == 2.
+    fuel = pl.BalbiFuel(e=2.0)
+    assert fuel.e.value == 2.0
 
 
 def test_BalbiFuel_copy():
     fuel = pl.BalbiFuel()
-    fuel2 = pl.BalbiFuel(e=2.)
-    assert fuel.e.value == 1.
-    assert fuel2.e.value == 2.
+    fuel2 = pl.BalbiFuel(e=2.0)
+    assert fuel.e.value == 1.0
+    assert fuel2.e.value == 2.0
 
 
 def test_BalbiFuel_get_ROS():
@@ -98,123 +122,30 @@ def test_BalbiFuel_minimal_dict_not_compact():
     assert mdict["properties"]["rhod"]["value"] == 400
 
 
-"""
-Scenario
-"""
-
-# def test_scenario_init():
-#     scenario = pl.Scenario()
-#     assert scenario.name == "Scenario"
-#     assert scenario.longname == "Scenario"
-#     assert scenario.infos == ""
-
-# def test_scenario_add_fuels():
-#     scenario = pl.Scenario()
-#     fuel1 = pl.BalbiFuel()
-#     fuel2 = pl.BalbiFuel(e=2.)
-#     scenario.add_fuels(fuel1, fuel2)
-#     assert scenario.fuels["BalbiFuel1"] == fuel1
-#     assert scenario.fuels["BalbiFuel2"] == fuel2
-
-# @pytest.mark.parametrize("filename",
-#     ["FireFluxI", "DefaultSA", "FireFluxI.yml", "DefaultSA.yml"]
-# )
-# def test_load_default_scenario(filename):
-#     pl.Scenario(load=filename)
-
-
-# def test_load_unknown_scenario():
-#     with pytest.raises(FileNotFoundError):
-#         pl.Scenario(load="MaxVerstappenWorldTitle")
-
-
-# @pytest.mark.parametrize("filename,iscompact",
-#     [("test", True), ("test", False), ("test.yml", True), ("test.yml", False)]
-# )
-# def test_save_scenario(tmpdir, filename, iscompact):
-#     S1 = pl.Scenario(load="FireFluxI")
-#     pathreal = tmpdir.ensure("test.yml")
-#     path = tmpdir.join(filename)
-#     S1.save(path.strpath, compact=iscompact)
-
-#     assert pathreal.readlines(cr=1)[0] == "Name: FireFlux\n"
-#     check_str = f"isCompact: {str(iscompact).lower()}\n"
-#     assert pathreal.readlines(cr=1)[3] == check_str
-
-
-# def test_scenario_getR():
-#     scenario = pl.Scenario()
-#     fuel1 = pl.BalbiFuel()
-#     fuel2 = pl.BalbiFuel(e=2.)
-#     scenario.add_fuels(fuel1, fuel2)
-#     ros = scenario.getR()
-#     assert ros['BalbiFuel1'] == 0.387354022265859
-#     assert ros['BalbiFuel2'] == 0.774708044531718
-
-
-# def test_scenario_show_verbose_0(capsys):
-#     scenario = pl.Scenario()
-#     fuel1 = pl.BalbiFuel()
-#     scenario.add_fuel(fuel1)
-#     scenario.show(verbose=0)
-#     captured = capsys.readouterr()
-#     assert captured.out == "Fuel index : 1, Fuel class : BalbiFuel\n"
-
-
-# def test_scenario_show_verbose_1(capsys):
-#     scenario = pl.Scenario()
-#     fuel1 = pl.BalbiFuel()
-#     scenario.add_fuel(fuel1)
-#     scenario.show(verbose=1)
-#     captured = capsys.readouterr()
-#     assert captured.out == "Fuel index : 1, Fuel class : BalbiFuel, ROS : 0.39 m/s\n"
-
-
-# def test_show_fuel_classes(capsys):
-#     default_list = [
-#         'BalbiFuel',
-#     ]
-#     pl.show_fuel_classes()
-#     captured = capsys.readouterr()
-#     for fuelclass in default_list:
-#         assert f"{fuelclass} class is compliant with" in captured.out
-
-
-# def test_show_default_scenario(capsys):
-#     default_list = [
-#         'DefaultSA.yml',
-#         'FireFluxI.yml',
-#         ]
-#     pl.show_default_scenario()
-#     captured = capsys.readouterr()
-#     for file in captured.out.split('\n')[1:-2]:
-#         assert f"{file[2:]}.yml" in default_list
-
 """FuelDatabase
 """
+
 
 def test_fuel_db_init():
     my_db = pl.FuelDatabase()
     assert my_db.fuels == {}
 
+
 def test_fuel_db_dict():
     my_db = pl.FuelDatabase()
     my_fuel = pl.BalbiFuel()
-    my_db["test"] = {
-        "BalbiFuel": my_fuel
-    }
+    my_db["test"] = {"BalbiFuel": my_fuel}
     assert my_db["test"]["BalbiFuel"] == my_fuel
 
-@pytest.mark.parametrize("filename",
-    ["FireFluxI", "DefaultSA", "FireFluxI.yml", "DefaultSA.yml"]
-)
+
+@pytest.mark.parametrize("filename", ["FireFluxI", "DefaultSA", "FireFluxI.yml", "DefaultSA.yml"])
 def test_fuel_db_load_default(filename):
     my_db = pl.FuelDatabase()
     my_db.load_fuel_database(filename)
 
 
-@pytest.mark.parametrize("filename,iscompact",
-    [("test", True), ("test", False), ("test.yml", True), ("test.yml", False)]
+@pytest.mark.parametrize(
+    "filename,iscompact", [("test", True), ("test", False), ("test.yml", True), ("test.yml", False)]
 )
 def test_fuel_db_dump(tmpdir, filename, iscompact):
     my_db = pl.FuelDatabase()
@@ -227,18 +158,49 @@ def test_fuel_db_dump(tmpdir, filename, iscompact):
     check_str = f"is_compact: {str(iscompact).lower()}\n"
     assert pathreal.readlines(cr=1)[1] == check_str
 
-# @pytest.mark.parametrize("show_db_content",
-#     [False, True]
-# )
-# def test_fuel_db_print(capsys, show_db_content):
-#     my_db = pl.FuelDatabase()
-#     my_db.list_avail_fuel_database(show_db_content=show_db_content)
-#     captured = capsys.readouterr()
-#     assert "----- pyrolib available database -----" in captured.out
-#     assert "FireFluxI" in captured.out
-#     assert "DefaultSA" in captured.out
-#     assert "------ local available database -----" in captured.out
-#     if show_db_content:
-#         assert "< tall_grass >" in captured.out
-#         assert "< default >" in captured.out
-#         assert "BalbiFuel fuel class" in captured.out
+
+def test_convert_lon_lat_2_x_y_mercator_no_rotation():
+    confproj = {
+        "beta": 0.0,
+        "k": 0.0,
+        "lat_ori": 0.0,
+        "lon_ori": 0.0,
+        "lat0": 0.0,
+        "lon0": 0.0,
+    }
+    lon_tgt = [0.0, 1.0]
+    lat_tgt = [0.0, 1.0]
+    xpos, ypos = convert_lon_lat_to_x_y(confproj, lat_tgt, lon_tgt)
+
+    assert isclose(xpos[0], 0)
+    assert isclose(xpos[1], 111198.9234485458)
+    assert isclose(ypos[0], 0)
+    assert isclose(ypos[1], 160434.28079762892)
+
+def test_convert_lon_lat_2_x_y_mercator_rotation():
+    confproj = {
+        "beta": 1.0,
+        "k": 0.0,
+        "lat_ori": 0.0,
+        "lon_ori": 0.0,
+        "lat0": 0.0,
+        "lon0": 0.0,
+    }
+    lon_tgt = [0.0, 1.0]
+    lat_tgt = [0.0, 1.0]
+    with pytest.raises(NotImplementedError):
+        convert_lon_lat_to_x_y(confproj, lat_tgt, lon_tgt)
+
+def test_convert_lon_lat_2_x_y_conformal():
+    confproj = {
+        "beta": 1.0,
+        "k": 1.0,
+        "lat_ori": 0.0,
+        "lon_ori": 0.0,
+        "lat0": 0.0,
+        "lon0": 0.0,
+    }
+    lon_tgt = [0.0, 1.0]
+    lat_tgt = [0.0, 1.0]
+    with pytest.raises(NotImplementedError):
+        convert_lon_lat_to_x_y(confproj, lat_tgt, lon_tgt)

@@ -22,13 +22,15 @@ from .patch import (
     LinePatch,
     RectanglePatch,
 )
-from.fuel_database import (
+from .fuel_database import (
     FuelDatabase,
 )
 from .utility import (
     fire_array_2d_to_3d,
     fill_fuel_array_from_patch,
+    convert_lon_lat_to_x_y,
 )
+
 
 class FuelMap:
     """Class for fuel map construction
@@ -82,7 +84,13 @@ class FuelMap:
 
     """
 
-    def __init__(self, fuel_db: FuelDatabase, namelistname: str="EXSEG1.nam", MesoNHversion: str="5.5.0", workdir: str=""):
+    def __init__(
+        self,
+        fuel_db: FuelDatabase,
+        namelistname: str = "EXSEG1.nam",
+        MesoNHversion: str = "5.5.0",
+        workdir: str = "",
+    ):
         self.fuel_db = fuel_db
         self.namelist = namelistname
         self.mnh_version = MesoNHversion
@@ -90,7 +98,9 @@ class FuelMap:
 
         # Read default values for MNHBLAZE namelist from Default_MNH_namelist.yml
         # Values should be compliant with default_desfmn.f90
-        defaultpath = pkg_resources.resource_stream("pyrolib", "/".join(("data", "Default_MNH_namelist.yml")))
+        defaultpath = pkg_resources.resource_stream(
+            "pyrolib", "/".join(("data", "Default_MNH_namelist.yml"))
+        )
         with open(defaultpath.name, "r") as ymlfile:
             alldata = yaml.safe_load(ymlfile)
         current_version = f"v{self.mnh_version.replace('.', '')}"
@@ -152,29 +162,63 @@ class FuelMap:
         MNHData = Dataset(f"{projectpath:s}/{self.mnhinifile:s}.nc")
         self.xhat = MNHData.variables["XHAT"][:]
         self.yhat = MNHData.variables["YHAT"][:]
-        MNHData.close()
         # get sizes
         self.nx = len(self.xhat)
         self.ny = len(self.yhat)
+
+        # get conformal projection parameters
+        if (
+            "BETA" in MNHData.variables.keys()
+            and "RPK" in MNHData.variables.keys()
+            and "LATORI" in MNHData.variables.keys()
+            and "LONORI" in MNHData.variables.keys()
+            and "LAT0" in MNHData.variables.keys()
+            and "LON0" in MNHData.variables.keys()
+        ):
+            self.confproj = {
+                "beta": float(MNHData.variables["BETA"][:]),
+                "k": float(MNHData.variables["RPK"][:]),
+                "lat_ori": float(MNHData.variables["LATORI"][:]),
+                "lon_ori": float(MNHData.variables["LONORI"][:]),
+                "lat0": float(MNHData.variables["LAT0"][:]),
+                "lon0": float(MNHData.variables["LON0"][:]),
+            }
+        else:
+            self.confproj = None
+
+        # close file
+        MNHData.close()
 
         self.xfiremeshsize[0] = float(self.xhat[1] - self.xhat[0]) / float(self.nrefinx)
         self.xfiremeshsize[1] = float(self.yhat[1] - self.yhat[0]) / float(self.nrefinx)
         self.firemeshsizes = [self.nx * self.nrefinx, self.ny * self.nrefiny]
         # Get mesh position of fuel cells
         self.xfiremesh = np.linspace(
-            self.xhat[0], self.xhat[-1] + (self.xhat[1] - self.xhat[0]), self.nx * self.nrefinx, endpoint=False
+            self.xhat[0],
+            self.xhat[-1] + (self.xhat[1] - self.xhat[0]),
+            self.nx * self.nrefinx,
+            endpoint=False,
         )
         self.xfiremesh += 0.5 * (self.xfiremesh[1] - self.xfiremesh[0])
 
         self.yfiremesh = np.linspace(
-            self.yhat[0], self.yhat[-1] + (self.yhat[1] - self.yhat[0]), self.ny * self.nrefiny, endpoint=False
+            self.yhat[0],
+            self.yhat[-1] + (self.yhat[1] - self.yhat[0]),
+            self.ny * self.nrefiny,
+            endpoint=False,
         )
         self.yfiremesh += 0.5 * (self.yfiremesh[1] - self.yfiremesh[0])
 
     def __add_rectangle_patch(
-        self, xpos: tuple, ypos: tuple, fuel_key: str = None, ignition_time: float = None, unburnable: bool = None
+        self,
+        pos1: tuple,
+        pos2: tuple,
+        fuel_key: str = None,
+        ignition_time: float = None,
+        unburnable: bool = None,
+        is_cartesian: bool = True,
     ):
-        """Add rectangle patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+        """Add rectangle patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
@@ -211,9 +255,9 @@ class FuelMap:
         Parameters
         -----
 
-        xpos : tuple
+        pos1 : tuple
             Position of west and east boundaries of the patch
-        ypos : tuple
+        pos2 : tuple
             Position of south and north boundaries of the patch
         fuel_key : str, optional
             Key of Fuel in FuelDatabase to place in the patch (default: `None`)
@@ -221,15 +265,26 @@ class FuelMap:
             Ignition time of patch (default: `None`)
         unburnable : bool, optional
             Flag to set patch as a non burnable area (default: `None`)
+        is_cartesian : bool, optional
+            pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
+        # convert lon, lat into x, y if necessary
+        if is_cartesian:
+            xpos = pos1
+            ypos = pos2
+        else:
+            xpos, ypos = convert_lon_lat_to_x_y(confproj=self.confproj, lat=pos2, lon=pos1)
+
         # Create mask
-        P = RectanglePatch(self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize)
+        P = RectanglePatch(
+            self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize
+        )
 
         # assign data
         self.__assign_data_to_data_array(P, fuel_key, None, ignition_time, unburnable)
 
-    def add_fuel_rectangle_patch(self, xpos: tuple, ypos: tuple, fuel_key: str):
-        """Add rectangle fuel patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+    def add_fuel_rectangle_patch(self, pos1: tuple, pos2: tuple, fuel_key: str, is_cartesian: bool = True):
+        """Add rectangle fuel patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
@@ -260,17 +315,19 @@ class FuelMap:
         Parameters
         -----
 
-        xpos : tuple
+        pos1 : tuple
             Position of west and east boundaries of the patch
-        ypos : tuple
+        pos2 : tuple
             Position of south and north boundaries of the patch
         fuel_key : str
             key of Fuel in fuel database to place in the patch
+        is_cartesian : bool, optional
+            pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
-        self.__add_rectangle_patch(xpos, ypos, fuel_key=fuel_key)
+        self.__add_rectangle_patch(pos1, pos2, fuel_key=fuel_key, is_cartesian=is_cartesian)
 
-    def add_unburnable_rectangle_patch(self, xpos: tuple, ypos: tuple):
-        """Add rectangle unburnable patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+    def add_unburnable_rectangle_patch(self, pos1: tuple, pos2: tuple, is_cartesian: bool = True):
+        """Add rectangle unburnable patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
@@ -300,15 +357,19 @@ class FuelMap:
         Parameters
         -----
 
-        xpos : tuple
+        pos1 : tuple
             Position of west and east boundaries of the patch
-        ypos : tuple
+        pos2 : tuple
             Position of south and north boundaries of the patch
+        is_cartesian : bool, optional
+            pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
-        self.__add_rectangle_patch(xpos, ypos, unburnable=True)
+        self.__add_rectangle_patch(pos1, pos2, unburnable=True, is_cartesian=is_cartesian)
 
-    def add_ignition_rectangle_patch(self, xpos: tuple, ypos: tuple, ignition_time: float):
-        """Add rectangle patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+    def add_ignition_rectangle_patch(
+        self, pos1: tuple, pos2: tuple, ignition_time: float, is_cartesian: bool = True
+    ):
+        """Add rectangle patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
@@ -338,25 +399,28 @@ class FuelMap:
         Parameters
         -----
 
-        xpos : tuple
+        pos1 : tuple
             Position of west and east boundaries of the patch
-        ypos : tuple
+        pos2 : tuple
             Position of south and north boundaries of the patch
         ignition_time : float
             Ignition time of patch
+        is_cartesian : bool, optional
+            pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
-        self.__add_rectangle_patch(xpos, ypos, ignition_time=ignition_time)
+        self.__add_rectangle_patch(pos1, pos2, ignition_time=ignition_time, is_cartesian=is_cartesian)
 
     def __add_line_patch(
         self,
-        xpos: tuple,
-        ypos: tuple,
+        pos1: tuple,
+        pos2: tuple,
         fuel_key: str = None,
         walking_ignition_times: list = None,
         ignition_time: float = None,
         unburnable: bool = None,
+        is_cartesian: bool = True,
     ):
-        """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+        """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
@@ -394,9 +458,9 @@ class FuelMap:
         Parameters
         -----
 
-        xpos : tuple
+        pos1 : tuple
             Position of west and east boundaries of the patch
-        ypos : tuple
+        pos2 : tuple
             Position of south and north boundaries of the patch
         fuel_key : str, optional
             Index of Fuel in FuelDatabase to place in the patch (default: `None`)
@@ -406,15 +470,23 @@ class FuelMap:
             Ignition time of patch (default: `None`)
         unburnable : bool, optional
             Flag to set patch as a non burnable area (default: `None`)
+        is_cartesian : bool, optional
+            pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
+        if is_cartesian:
+            xpos = pos1
+            ypos = pos2
+        else:
+            xpos, ypos = convert_lon_lat_to_x_y(confproj=self.confproj, lat=pos2, lon=pos1)
+
         # Create mask
         patch = LinePatch(self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize)
 
         # # assign data
         self.__assign_data_to_data_array(patch, fuel_key, walking_ignition_times, ignition_time, unburnable)
 
-    def add_fuel_line_patch(self, xpos: tuple, ypos: tuple, fuel_key: str):
-        """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+    def add_fuel_line_patch(self, pos1: tuple, pos2: tuple, fuel_key: str, is_cartesian: bool = True):
+        """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
@@ -443,17 +515,21 @@ class FuelMap:
         Parameters
         -----
 
-        xpos : tuple
+        pos1 : tuple
             Position of west and east boundaries of the patch
-        ypos : tuple
+        pos2 : tuple
             Position of south and north boundaries of the patch
         fuel_key : str
             Key of Fuel in fuel database to place in the patch
+        is_cartesian : bool, optional
+            pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
-        self.__add_line_patch(xpos, ypos, fuel_key=fuel_key)
+        self.__add_line_patch(pos1, pos2, fuel_key=fuel_key, is_cartesian=is_cartesian)
 
-    def add_walking_ignition_line_patch(self, xpos: tuple, ypos: tuple, walking_ignition_times: list):
-        """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+    def add_walking_ignition_line_patch(
+        self, pos1: tuple, pos2: tuple, walking_ignition_times: list, is_cartesian: bool = True
+    ):
+        """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
@@ -482,17 +558,23 @@ class FuelMap:
         Parameters
         -----
 
-        xpos : tuple
+        pos1 : tuple
             Position of west and east boundaries of the patch
-        ypos : tuple
+        pos2 : tuple
             Position of south and north boundaries of the patch
         walking_ignition_times : list
             Ignition times of points A and B of the ignition line, respectively
+        is_cartesian : bool, optional
+            pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
-        self.__add_line_patch(xpos, ypos, walking_ignition_times=walking_ignition_times)
+        self.__add_line_patch(
+            pos1, pos2, walking_ignition_times=walking_ignition_times, is_cartesian=is_cartesian
+        )
 
-    def add_ignition_line_patch(self, xpos: tuple, ypos: tuple, ignition_time: float):
-        """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+    def add_ignition_line_patch(
+        self, pos1: tuple, pos2: tuple, ignition_time: float, is_cartesian: bool = True
+    ):
+        """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
@@ -520,17 +602,19 @@ class FuelMap:
         Parameters
         -----
 
-        xpos : tuple
+        pos1 : tuple
             Position of west and east boundaries of the patch
-        ypos : tuple
+        pos2 : tuple
             Position of south and north boundaries of the patch
         ignition_time : float
             Ignition time of patch
+        is_cartesian : bool, optional
+            pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
-        self.__add_line_patch(xpos, ypos, ignition_time=ignition_time)
+        self.__add_line_patch(pos1, pos2, ignition_time=ignition_time, is_cartesian=is_cartesian)
 
-    def add_unburnable_line_patch(self, xpos: tuple, ypos: tuple):
-        """Add line patch between (xpos[0], ypos[0]) and (xpos[1], ypos[1]).
+    def add_unburnable_line_patch(self, pos1: tuple, pos2: tuple, is_cartesian: bool = True):
+        """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
@@ -558,12 +642,14 @@ class FuelMap:
         Parameters
         -----
 
-        xpos : tuple
+        pos1 : tuple
             Position of west and east boundaries of the patch
-        ypos : tuple
+        pos2 : tuple
             Position of south and north boundaries of the patch
+        is_cartesian : bool, optional
+            pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
-        self.__add_line_patch(xpos, ypos, unburnable=True)
+        self.__add_line_patch(pos1, pos2, unburnable=True, is_cartesian=is_cartesian)
 
     def __assign_data_to_data_array(
         self,
@@ -610,7 +696,9 @@ class FuelMap:
                         self.fuel_index_correspondance[fuel_key] = fuelindex
 
                     # create property vector for this fuel
-                    propvector = self.fuel_db.fuels[fuel_key][needed_fuelclass].get_property_vector(fuelindex, self.nbpropertiesfuel)
+                    propvector = self.fuel_db.fuels[fuel_key][needed_fuelclass].get_property_vector(
+                        fuelindex, self.nbpropertiesfuel
+                    )
 
                     self.fuelmaparray = fill_fuel_array_from_patch(
                         self.fuelmaparray,
@@ -621,7 +709,9 @@ class FuelMap:
                         self.firemeshsizes[1],
                     )
                 else:
-                    print(f"Fuel < {fuel_key} > do not exist in database with the needed Fuel Class < {needed_fuelclass} >.")
+                    print(
+                        f"Fuel < {fuel_key} > do not exist in database with the needed Fuel Class < {needed_fuelclass} >."
+                    )
             else:
                 print(f"Fuel < {fuel_key} > not found in the fuel database. Nothing appended")
             return
@@ -636,9 +726,14 @@ class FuelMap:
             # compute ignition time for each line point
             for ind in patch.line:
                 # distance from A
-                dist = sqrt(pow(self.xfiremesh[ind[0]] - patch.xpos[0], 2) + pow(self.yfiremesh[ind[1]] - patch.ypos[0], 2))
+                dist = sqrt(
+                    pow(self.xfiremesh[ind[0]] - patch.xpos[0], 2)
+                    + pow(self.yfiremesh[ind[1]] - patch.ypos[0], 2)
+                )
                 # linear interpolation
-                self.walkingignitionmaparray[ind[1], ind[0]] = walkingignitiontimes[0] + dist * ignitiondt / totaldist
+                self.walkingignitionmaparray[ind[1], ind[0]] = (
+                    walkingignitiontimes[0] + dist * ignitiondt / totaldist
+                )
             return
 
         # case 3 : ignition of whole patch is set
@@ -763,7 +858,9 @@ class FuelMap:
         IgnitionNC.standard_name = "Ignition"
         IgnitionNC.long_name = "Ignition time"
         IgnitionNC.units = "s"
-        IgnitionNC[:, :, :] = fire_array_2d_to_3d(self.ignitionmaparray, self.nx, self.ny, self.nrefinx, self.nrefiny)
+        IgnitionNC[:, :, :] = fire_array_2d_to_3d(
+            self.ignitionmaparray, self.nx, self.ny, self.nrefinx, self.nrefiny
+        )
 
         # walking ignition map
         if verbose >= 2:
@@ -774,7 +871,9 @@ class FuelMap:
         IgnitionNC.standard_name = "WalkingIgnition"
         IgnitionNC.long_name = "Walking ignition time"
         IgnitionNC.units = "s"
-        IgnitionNC[:, :, :] = fire_array_2d_to_3d(self.walkingignitionmaparray, self.nx, self.ny, self.nrefinx, self.nrefiny)
+        IgnitionNC[:, :, :] = fire_array_2d_to_3d(
+            self.walkingignitionmaparray, self.nx, self.ny, self.nrefinx, self.nrefiny
+        )
 
         # fuel type map
         if verbose >= 2:
@@ -785,12 +884,16 @@ class FuelMap:
         FuelMap.comment = "Fuel type"
         FuelMap.units = "-"
         FuelMap.grid = np.intc(4)
-        FuelMap[:, :, :] = fire_array_2d_to_3d(self.fuelmaparray[0, :, :], self.nx, self.ny, self.nrefinx, self.nrefiny)
+        FuelMap[:, :, :] = fire_array_2d_to_3d(
+            self.fuelmaparray[0, :, :], self.nx, self.ny, self.nrefinx, self.nrefiny
+        )
 
         # Write each fuel as 3d table
         if verbose >= 2:
             print(f">> Store properties maps")
-        chosen_fuel_class = getattr(sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model])()
+        chosen_fuel_class = getattr(
+            sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]
+        )()
         for propertyname in vars(chosen_fuel_class):
             propertyobj = getattr(chosen_fuel_class, propertyname)
             if propertyobj.propertyindex is not None:
@@ -802,7 +905,11 @@ class FuelMap:
                 FuelMap.units = propertyobj.unit
                 FuelMap.grid = np.intc(4)
                 FuelMap[:, :, :] = fire_array_2d_to_3d(
-                    self.fuelmaparray[propertyobj.propertyindex, :, :], self.nx, self.ny, self.nrefinx, self.nrefiny
+                    self.fuelmaparray[propertyobj.propertyindex, :, :],
+                    self.nx,
+                    self.ny,
+                    self.nrefinx,
+                    self.nrefiny,
                 )
 
         if verbose >= 1:
@@ -946,14 +1053,14 @@ class FuelMap:
         # Write each fuel as 3d table
         if verbose >= 2:
             print(f">> Store properties maps")
-        chosen_fuel_class = getattr(sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model])()
+        chosen_fuel_class = getattr(
+            sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]
+        )()
         for propertyname in vars(chosen_fuel_class):
             propertyobj = getattr(chosen_fuel_class, propertyname)
             if propertyobj.propertyindex is not None:
                 fuelname = f"Fuel{propertyobj.propertyindex + 1:02d}"
-                FuelMap = NewFile.createVariable(
-                    fuelname, np.float64, ("YFIRE", "XFIRE")
-                )
+                FuelMap = NewFile.createVariable(fuelname, np.float64, ("YFIRE", "XFIRE"))
                 FuelMap.standard_name = fuelname
                 FuelMap.long_name = propertyobj.name
                 FuelMap.comment = propertyobj.description
@@ -968,8 +1075,7 @@ class FuelMap:
         self.__show_fuel_index_correspondance()
 
     def __show_fuel_index_correspondance(self):
-        """print fuel index correspondance dict
-        """
+        """print fuel index correspondance dict"""
         print("---------- fuel index table ----------")
         print(" Index |             Fuel             ")
         for fuel in self.fuel_index_correspondance.keys():
