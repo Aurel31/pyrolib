@@ -754,7 +754,11 @@ class FuelMap:
                 self.firemeshsizes[1],
             )
             return
-        print("WARNING: No information given on what to do. Nothing done")
+        print("WARNING: No information given on what to do.")
+        print("WARNING:     - fuel_key not defined (expected str)")
+        print("WARNING:     - walkingignitiontimes not defined")
+        print("WARNING:     - ignitiontime not defined")
+        print("WARNING:     - unburnable not defined")
 
     def dump_mesonh(self, verbose: int = 0):
         """Write Fuel map as netCFD file named FuelMap.nc for Méso-NH

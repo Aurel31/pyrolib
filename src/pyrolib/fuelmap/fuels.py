@@ -435,7 +435,7 @@ _ROSMODEL_FUELCLASS_REGISTER = {
 }
 
 
-def _show_fuel_classes(show_fuel_properties=True):
+def show_fuel_classes(show_fuel_properties=True):
     """Print fuel classes available in pyrolib and default parameters values"""
     # Balbi
     print("\nMore information about fuel classes:")

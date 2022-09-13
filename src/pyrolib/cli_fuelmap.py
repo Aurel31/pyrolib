@@ -10,7 +10,7 @@ import yaml
 from pyrolib import __name__ as pyrolib_name
 from pyrolib import __version__ as pyrolib_version
 
-from .fuelmap.fuels import _show_fuel_classes
+from .fuelmap.fuels import show_fuel_classes
 
 
 def add_version(f):
@@ -91,7 +91,7 @@ def list_fuel_databases(short):
                     print()
     print("--------------------------------------")
     if short:
-        _show_fuel_classes(show_fuel_properties=False)
+        show_fuel_classes(show_fuel_properties=False)
     else:
         print()
 
@@ -105,7 +105,7 @@ main_cli.add_command(list_fuel_databases)
 )
 def list_fuel_classes(short):
     """List fuel classes available in pyrolib and default parameters values"""
-    _show_fuel_classes(show_fuel_properties=not short)
+    show_fuel_classes(show_fuel_properties=not short)
 
 
 main_cli.add_command(list_fuel_classes)

@@ -1,4 +1,4 @@
-import pyrolib.fuels as pl
+import pyrolib.fuelmap as pl
 
 # print fuel classes available and default property values
 pl.show_fuel_classes()
