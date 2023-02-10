@@ -143,13 +143,13 @@ class FuelMap:
         if "nam_lunitn" in mnh_nml.keys():
             if "cinifile" in mnh_nml["nam_lunitn"].keys():
                 self.mnhinifile = mnh_nml["nam_lunitn"]["cinifile"]
-        if "nam_fire" in mnh_nml.keys():
-            if "cpropag_model" in mnh_nml["nam_fire"].keys():
-                self.cpropag_model = mnh_nml["nam_fire"]["cpropag_model"]
-            if "nrefinx" in mnh_nml["nam_fire"].keys():
-                self.nrefinx = mnh_nml["nam_fire"]["nrefinx"]
-            if "nrefiny" in mnh_nml["nam_fire"].keys():
-                self.nrefiny = mnh_nml["nam_fire"]["nrefiny"]
+        if "nam_firen" in mnh_nml.keys():
+            if "cpropag_model" in mnh_nml["nam_firen"].keys():
+                self.cpropag_model = mnh_nml["nam_firen"]["cpropag_model"]
+            if "nrefinx" in mnh_nml["nam_firen"].keys():
+                self.nrefinx = mnh_nml["nam_firen"]["nrefinx"]
+            if "nrefiny" in mnh_nml["nam_firen"].keys():
+                self.nrefiny = mnh_nml["nam_firen"]["nrefiny"]
 
         # Check if INIFILE.des exists
         if not os.path.exists(f"{projectpath:s}/{self.mnhinifile:s}.des"):
