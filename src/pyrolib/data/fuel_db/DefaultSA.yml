@@ -7,11 +7,11 @@ fuels:
       properties:
         DeltaH:
           Description: Combustion enthalpy
-          Unit: J/kg
+          Unit: 'J kg-1'
           Value: 15430000.0
         Deltah:
           Description: Water evaporation enthalpy
-          Unit: J/kg
+          Unit: 'J kg-1'
           Value: 2500000.0
         LAI:
           Description: Leaf area index
@@ -27,23 +27,23 @@ fuels:
           Value: 0.8
         Rhoa:
           Description: Air density
-          Unit: kg/m3
+          Unit: 'kg m-3'
           Value: 1.2
         Rhod:
           Description: Dead fuel density
-          Unit: kg/m3
+          Unit: 'kg m-3'
           Value: 400
         Rhol:
           Description: Living fuel density
-          Unit: kg/m3
+          Unit: 'kg m-3'
           Value: 400
         Sigmad:
           Description: Dead fuel load
-          Unit: kg/m2
+          Unit: 'kg m-2'
           Value: 1.0
         Sigmal:
           Description: Living fuel load
-          Unit: kg/m2
+          Unit: 'kg m-2'
           Value: 0.1
         Slope:
           Description: Slope
@@ -55,15 +55,15 @@ fuels:
           Value: 300.0
         Tau0:
           Description: '?'
-          Unit: s/m
+          Unit: 's m-1'
           Value: 75590
         Ti:
           Description: Ignition temperature
           Unit: K
-          Value: 500
+          Value: 590
         Wind:
           Description: Wind at mid-flame
-          Unit: m/s
+          Unit: 'm s-1'
           Value: 0.0
         X0:
           Description: Fraction of radiant energy
@@ -71,11 +71,11 @@ fuels:
           Value: 0.3
         cp:
           Description: Fuel calorific capacity
-          Unit: J/K/kg
+          Unit: 'J K-1 kg-1'
           Value: 1912.0
         cpa:
           Description: Air calorific capacity
-          Unit: J/K/kg
+          Unit: 'J K-1 kg-1'
           Value: 1004.0
         e:
           Description: Fuel height
@@ -87,11 +87,11 @@ fuels:
           Value: 2.0e-05
         sd:
           Description: Dead SAV ratio
-          Unit: /m
+          Unit: 'm-1'
           Value: 5000
         sl:
           Description: Living SAV ratio
-          Unit: /m
+          Unit: 'm-1'
           Value: 5000
         stoch:
           Description: Stochiometry
