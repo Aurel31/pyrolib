@@ -143,13 +143,13 @@ class FuelMap:
         if "nam_lunitn" in mnh_nml.keys():
             if "cinifile" in mnh_nml["nam_lunitn"].keys():
                 self.mnhinifile = mnh_nml["nam_lunitn"]["cinifile"]
-        if "nam_fire" in mnh_nml.keys():
-            if "cpropag_model" in mnh_nml["nam_fire"].keys():
-                self.cpropag_model = mnh_nml["nam_fire"]["cpropag_model"]
-            if "nrefinx" in mnh_nml["nam_fire"].keys():
-                self.nrefinx = mnh_nml["nam_fire"]["nrefinx"]
-            if "nrefiny" in mnh_nml["nam_fire"].keys():
-                self.nrefiny = mnh_nml["nam_fire"]["nrefiny"]
+        if "nam_firen" in mnh_nml.keys():
+            if "cpropag_model" in mnh_nml["nam_firen"].keys():
+                self.cpropag_model = mnh_nml["nam_firen"]["cpropag_model"]
+            if "nrefinx" in mnh_nml["nam_firen"].keys():
+                self.nrefinx = mnh_nml["nam_firen"]["nrefinx"]
+            if "nrefiny" in mnh_nml["nam_firen"].keys():
+                self.nrefiny = mnh_nml["nam_firen"]["nrefiny"]
 
         # Check if INIFILE.des exists
         if not os.path.exists(f"{projectpath:s}/{self.mnhinifile:s}.des"):
@@ -828,28 +828,24 @@ class FuelMap:
             print(f">> Store grid")
 
         ni = NewFile.createVariable("X", np.float64, ("X"))
-        ni.comment = "x-dimension"
-        ni.grid = np.intc(0)
-        ni.standard_name = "x coordinates"
+        ni.long_name = "x-dimension of the grid"
+        ni.standard_name = "x_coordinate"
         ni.units = "m"
         ni.axis = "X"
         ni[:] = self.xhat
 
         # y grid
         nj = NewFile.createVariable("Y", np.float64, ("Y"))
-        nj.comment = "y-dimension"
-        nj.grid = np.intc(0)
-        nj.standard_name = "y coordinates"
+        nj.long_name = "y-dimension of the grid"
+        nj.standard_name = "y_coordinate"
         nj.units = "m"
         nj.axis = "Y"
         nj[:] = self.yhat
 
         # fire grid
         firelevel = NewFile.createVariable("F", np.float64, ("F"))
-        firelevel.comment = "fire-dimension"
-        firelevel.grid = np.intc(0)
-        firelevel.standard_name = "Fire dimension"
-        firelevel.axis = "F"
+        firelevel.long_name = "fire-dimension"
+        firelevel.standard_name = " "
         firelevel[:] = np.array(np.arange(0, self.nrefinx * self.nrefiny), dtype=np.float64)
 
         # ignition map
@@ -859,7 +855,7 @@ class FuelMap:
         IgnitionNC = NewFile.createVariable("Ignition", np.float64, ("F", "Y", "X"))
         IgnitionNC.comment = "Ignition map"
         IgnitionNC.grid = np.intc(4)
-        IgnitionNC.standard_name = "Ignition"
+        IgnitionNC.standard_name = " "
         IgnitionNC.long_name = "Ignition time"
         IgnitionNC.units = "s"
         IgnitionNC[:, :, :] = fire_array_2d_to_3d(
@@ -872,7 +868,7 @@ class FuelMap:
         IgnitionNC = NewFile.createVariable("WalkingIgnition", np.float64, ("F", "Y", "X"))
         IgnitionNC.comment = "WalkingIgnition map"
         IgnitionNC.grid = np.intc(4)
-        IgnitionNC.standard_name = "WalkingIgnition"
+        IgnitionNC.standard_name = " "
         IgnitionNC.long_name = "Walking ignition time"
         IgnitionNC.units = "s"
         IgnitionNC[:, :, :] = fire_array_2d_to_3d(
@@ -882,11 +878,11 @@ class FuelMap:
         # fuel type map
         if verbose >= 2:
             print(f">> Store fuel type map")
-        FuelMap = NewFile.createVariable("Fuel01", np.float64, ("F", "Y", "X"))
-        FuelMap.standard_name = "Fuel01"
-        FuelMap.long_name = "Fuel type"
+        FuelMap = NewFile.createVariable("Fuel_type", np.float64, ("F", "Y", "X"))
+        FuelMap.standard_name = " "
+        FuelMap.long_name = "Fuel_type"
         FuelMap.comment = "Fuel type"
-        FuelMap.units = "-"
+        FuelMap.units = "1"
         FuelMap.grid = np.intc(4)
         FuelMap[:, :, :] = fire_array_2d_to_3d(
             self.fuelmaparray[0, :, :], self.nx, self.ny, self.nrefinx, self.nrefiny
@@ -901,9 +897,9 @@ class FuelMap:
         for propertyname in vars(chosen_fuel_class):
             propertyobj = getattr(chosen_fuel_class, propertyname)
             if propertyobj.propertyindex is not None:
-                fuelname = f"Fuel{propertyobj.propertyindex + 1:02d}"
+                fuelname = propertyobj.name
                 FuelMap = NewFile.createVariable(fuelname, np.float64, ("F", "Y", "X"))
-                FuelMap.standard_name = fuelname
+                FuelMap.standard_name = " "
                 FuelMap.long_name = propertyobj.name
                 FuelMap.comment = propertyobj.description
                 FuelMap.units = propertyobj.unit
@@ -987,35 +983,31 @@ class FuelMap:
             print(f">> Store grid")
 
         ni = NewFile.createVariable("X", np.float64, ("X"))
-        ni.comment = "x-dimension"
-        ni.grid = np.intc(0)
-        ni.standard_name = "x coordinates"
+        ni.long_name = "x-dimension of the grid"
+        ni.standard_name = "x_coordinate"
         ni.units = "m"
         ni.axis = "X"
         ni[:] = self.xhat
 
         # y grid
         nj = NewFile.createVariable("Y", np.float64, ("Y"))
-        nj.comment = "y-dimension"
-        nj.grid = np.intc(0)
-        nj.standard_name = "y coordinates"
+        nj.long_name = "y-dimension of the grid"
+        nj.standard_name = "y_coordinate"
         nj.units = "m"
         nj.axis = "Y"
         nj[:] = self.yhat
 
         # fire grid
         firegrid = NewFile.createVariable("XFIRE", np.float64, ("XFIRE"))
-        firegrid.comment = "x-fire-dimension"
-        firegrid.grid = np.intc(0)
-        firegrid.standard_name = "x Fire dimension"
+        firegrid.long_name = "x-fire-dimension"
+        firegrid.standard_name = "x_coordinate"
         firegrid.axis = "X"
         firegrid.unit = "m"
         firegrid[:] = self.xfiremesh
 
         firegrid = NewFile.createVariable("YFIRE", np.float64, ("YFIRE"))
-        firegrid.comment = "y-fire-dimension"
-        firegrid.grid = np.intc(0)
-        firegrid.standard_name = "y Fire dimension"
+        firegrid.long_name = "y-fire-dimension"
+        firegrid.standard_name = "y_coordinate"
         firegrid.axis = "Y"
         firegrid.unit = "m"
         firegrid[:] = self.yfiremesh
@@ -1027,7 +1019,7 @@ class FuelMap:
         IgnitionNC = NewFile.createVariable("Ignition", np.float64, ("YFIRE", "XFIRE"))
         IgnitionNC.comment = "Ignition map"
         IgnitionNC.grid = np.intc(4)
-        IgnitionNC.standard_name = "Ignition"
+        IgnitionNC.standard_name = " "
         IgnitionNC.long_name = "Ignition time"
         IgnitionNC.units = "s"
         IgnitionNC[:, :] = self.ignitionmaparray
@@ -1038,7 +1030,7 @@ class FuelMap:
         IgnitionNC = NewFile.createVariable("WalkingIgnition", np.float64, ("YFIRE", "XFIRE"))
         IgnitionNC.comment = "WalkingIgnition map"
         IgnitionNC.grid = np.intc(4)
-        IgnitionNC.standard_name = "WalkingIgnition"
+        IgnitionNC.standard_name = " "
         IgnitionNC.long_name = "Walking ignition time"
         IgnitionNC.units = "s"
         IgnitionNC[:, :] = self.walkingignitionmaparray
@@ -1046,12 +1038,12 @@ class FuelMap:
         # fuel type map
         if verbose >= 2:
             print(f">> Store fuel type map")
-        FuelMap = NewFile.createVariable("Fuel01", np.float64, ("YFIRE", "XFIRE"))
-        FuelMap.standard_name = "Fuel01"
-        FuelMap.long_name = "Fuel type"
+        FuelMap = NewFile.createVariable("Fuel_type", np.float64, ("YFIRE", "XFIRE"))
+        FuelMap.standard_name = " "
+        FuelMap.long_name = "Fuel_type"
         FuelMap.comment = "Fuel type"
         FuelMap.grid = np.intc(4)
-        FuelMap.units = "-"
+        FuelMap.units = "1"
         FuelMap[:, :] = self.fuelmaparray[0, :, :]
 
         # Write each fuel as 3d table
@@ -1063,9 +1055,9 @@ class FuelMap:
         for propertyname in vars(chosen_fuel_class):
             propertyobj = getattr(chosen_fuel_class, propertyname)
             if propertyobj.propertyindex is not None:
-                fuelname = f"Fuel{propertyobj.propertyindex + 1:02d}"
+                fuelname = propertyobj.name
                 FuelMap = NewFile.createVariable(fuelname, np.float64, ("YFIRE", "XFIRE"))
-                FuelMap.standard_name = fuelname
+                FuelMap.standard_name = " "
                 FuelMap.long_name = propertyobj.name
                 FuelMap.comment = propertyobj.description
                 FuelMap.units = propertyobj.unit
