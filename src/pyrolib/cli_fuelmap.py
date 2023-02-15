@@ -20,9 +20,7 @@ def add_version(f):
     :return: decorated function
     """
     doc = f.__doc__
-    f.__doc__ = (
-        "Package " + pyrolib_name + " v" + pyrolib_version + "\n\n" + doc
-    )
+    f.__doc__ = "Package " + pyrolib_name + " v" + pyrolib_version + "\n\n" + doc
 
     return f
 
@@ -37,9 +35,7 @@ def main_cli():
 
 
 @click.command()
-@click.option(
-    "-s", "--short", is_flag=True, default=True, help="print database content"
-)
+@click.option("-s", "--short", is_flag=True, default=True, help="print database content")
 def list_fuel_databases(short):
     """List fuel databases available in pyrolib"""
     data_dir_content = pkg_resources.resource_listdir("pyrolib", "data/fuel_db")
@@ -50,17 +46,13 @@ def list_fuel_databases(short):
             print(f"  * {file.replace('.yml','')}")
             if short:
                 # print db fuels
-                defaultpath = pkg_resources.resource_stream(
-                    "pyrolib", "/".join(("data/fuel_db", file))
-                )
+                defaultpath = pkg_resources.resource_stream("pyrolib", "/".join(("data/fuel_db", file)))
                 with open(defaultpath.name, "r") as ymlfile:
                     alldata = yaml.safe_load(ymlfile)
                 for fuel_description in alldata["fuels"].keys():
                     print(f"    < {fuel_description} > available for:")
                     for fuel_class in alldata["fuels"][fuel_description].keys():
-                        fuel_class = alldata["fuels"][fuel_description][fuel_class][
-                            "class"
-                        ]
+                        fuel_class = alldata["fuels"][fuel_description][fuel_class]["class"]
                         print(f"      - {fuel_class} fuel class")
                 print()
 
@@ -73,20 +65,14 @@ def list_fuel_databases(short):
             with open(file, "r") as ymlfile:
                 alldata = yaml.safe_load(ymlfile)
             # check if is_compact, infos, and fuels are in keys
-            if (
-                "is_compact" in alldata.keys()
-                and "infos" in alldata.keys()
-                and "fuels" in alldata.keys()
-            ):
+            if "is_compact" in alldata.keys() and "infos" in alldata.keys() and "fuels" in alldata.keys():
                 print(f"  * {file.replace('.yml','')}")
                 if short:
                     # print db fuels
                     for fuel_description in alldata["fuels"].keys():
                         print(f"    < {fuel_description} > available for:")
                         for fuel_class in alldata["fuels"][fuel_description].keys():
-                            fuel_class = alldata["fuels"][fuel_description][fuel_class][
-                                "class"
-                            ]
+                            fuel_class = alldata["fuels"][fuel_description][fuel_class]["class"]
                             print(f"      - {fuel_class} fuel class")
                     print()
     print("--------------------------------------")
@@ -100,9 +86,7 @@ main_cli.add_command(list_fuel_databases)
 
 
 @click.command()
-@click.option(
-    "-s", "--short", is_flag=True, default=False, help="do not show fuel classes attributs"
-)
+@click.option("-s", "--short", is_flag=True, default=False, help="do not show fuel classes attributs")
 def list_fuel_classes(short):
     """List fuel classes available in pyrolib and default parameters values"""
     show_fuel_classes(show_fuel_properties=not short)

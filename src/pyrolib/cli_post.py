@@ -19,9 +19,7 @@ def add_version(f):
     :return: decorated function
     """
     doc = f.__doc__
-    f.__doc__ = (
-        "Package " + pyrolib_name + " v" + pyrolib_version + "\n\n" + doc
-    )
+    f.__doc__ = "Package " + pyrolib_name + " v" + pyrolib_version + "\n\n" + doc
 
     return f
 
@@ -37,13 +35,7 @@ def main_cli():
 
 @click.command()
 @click.argument("files", nargs=-1)
-@click.option(
-    "-r",
-    "--remove",
-    is_flag=True,
-    default=False,
-    help='remove original file'
-)
+@click.option("-r", "--remove", is_flag=True, default=False, help="remove original file")
 def rearrange_netcdf(files, remove):
     """Rearrange netcdf with fire fields"""
     for file in files:
@@ -56,9 +48,7 @@ def rearrange_netcdf(files, remove):
                     dst.setncattr(name, src.getncattr(name))
                 # copy dimensions
                 for name, dimension in src.dimensions.items():
-                    dst.createDimension(
-                        name, (len(dimension) if not dimension.isunlimited() else None)
-                    )
+                    dst.createDimension(name, (len(dimension) if not dimension.isunlimited() else None))
                 # compute fire grid
                 grid_u_x = src.variables["ni_u"]
                 grid_v_y = src.variables["nj_v"]
@@ -74,9 +64,7 @@ def rearrange_netcdf(files, remove):
                 if need_fire_grid:
                     # get fire grid refinement ratio (parse comment of ref_fire_field)
                     gamma_x = int(
-                        src.variables[ref_fire_field]
-                        .comment.split("fire grid (")[-1]
-                        .split(",")[0]
+                        src.variables[ref_fire_field].comment.split("fire grid (")[-1].split(",")[0]
                     )
                     gamma_y = int(
                         src.variables[ref_fire_field]
@@ -123,9 +111,7 @@ def rearrange_netcdf(files, remove):
                 for name, variable in src.variables.items():
                     # check fill_value
                     fill_value = (
-                        variable.getncattr("_FillValue")
-                        if "_FillValue" in vars(variable).keys()
-                        else None
+                        variable.getncattr("_FillValue") if "_FillValue" in vars(variable).keys() else None
                     )
                     if name in LIST_FIRE_FIELD:
                         # fire field
