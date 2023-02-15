@@ -318,7 +318,7 @@ class BalbiFuel(BaseFuel):
         self.X0     = FuelProperty(name='X0',      value=0.3,      unit='-',            description='Fraction of radiant energy',   propertyindex=19)
         self.LAI    = FuelProperty(name='LAI',     value=4.,       unit='-',            description='Leaf area index',              propertyindex=20)
         self.r00    = FuelProperty(name='r00',     value=2e-5,     unit='-',            description='Model constant',               propertyindex=21)
-        self.wind   = FuelProperty(name='wind',    value=0.,       unit='m/s',          description='Wind at mid-flame')
+        self.wind   = FuelProperty(name='wind',    value=0.,       unit='m s-1',        description='Wind at mid-flame')
         self.slope  = FuelProperty(name='slope',   value=0.,       unit='deg',          description='Slope')
         # fmt: on
         # Modify from default
