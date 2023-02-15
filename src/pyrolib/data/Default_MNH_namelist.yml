@@ -9,3 +9,8 @@ v550:
   cpropag_model: 'SANTONI2011'
   nrefinx: 1
   nrefiny: 1
+v560:
+  mnhinifile: 'INIFILE'
+  cpropag_model: 'SANTONI2011'
+  nrefinx: 1
+  nrefiny: 1
