@@ -48,7 +48,7 @@ A user database can be saved in a `.yml` file. See example `examples/fuel_databa
 
 ## `Méso-NH` compliance
 
-The current version of `pyrolib` is compliant with `Méso-NH` from version `5.4.4` to version `5.5.0`.
+The current version of `pyrolib` is compliant with `Méso-NH` from version `5.6.0` to version `5.6.0`.
 ## Acknowledgements
 
 This library is part of the `ANR FireCaster` project (2017-2021, `ANR-16-CE04-0006, FIRECASTER`).

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] 2022 / 09 / 13
+**Warning**: Backward compatibility with MesoNH version < 5.6 is not guaranteed anymore.
+
+### Changed
+- change units nomenclature in fuel database
+- comply to MesoNH 5.6.0 file conventions
+- namelist for Blaze is now called nam_firen
+
 ## [0.3.1] 2022 / 09 / 13
 ### Changed
 - import fuelmap instead of fuels for fuel_classes example

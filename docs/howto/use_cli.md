@@ -14,7 +14,7 @@ To get some help on the cli, use `pyrolib-fm --help`.
 > pyrolib-fm --help
 Usage: pyrolib-fm [OPTIONS] COMMAND [ARGS]...
 
-  Package pyrolib v0.3.0a0
+  Package pyrolib v0.4.0
 
   * cli of pyrolib package for fuelmap *
 
@@ -69,7 +69,7 @@ BalbiFuel properties:
   Property      X0 = 3.000e-01 [-     ] as Fraction of radiant energy
   Property     LAI = 4.000e+00 [-     ] as Leaf area index
   Property     r00 = 2.000e-05 [-     ] as Model constant
-  Property    wind = 0.000e+00 [m/s   ] as Wind at mid-flame
+  Property    wind = 0.000e+00 [m s-1 ] as Wind at mid-flame
   Property   slope = 0.000e+00 [deg   ] as Slope
 ```
 
@@ -152,7 +152,7 @@ To get some help on the cli, use `pyrolib-post --help`.
 > pyrolib-post --help
 Usage: pyrolib-post [OPTIONS] COMMAND [ARGS]...
 
-  Package pyrolib v0.3.0a0
+  Package pyrolib v0.4.0
 
   * cli of pyrolib package for post processing *
 
