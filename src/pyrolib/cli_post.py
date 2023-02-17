@@ -62,16 +62,9 @@ def rearrange_netcdf(files, remove):
                         ref_fire_field = fire_field
 
                 if need_fire_grid:
-                    # get fire grid refinement ratio (parse comment of ref_fire_field)
-                    gamma_x = int(
-                        src.variables[ref_fire_field].comment.split("fire grid (")[-1].split(",")[0]
-                    )
-                    gamma_y = int(
-                        src.variables[ref_fire_field]
-                        .comment.split("fire grid (")[-1]
-                        .split(",")[1]
-                        .replace(")", "")
-                    )
+                    # fire grid refinement ratio
+                    gamma_x = src.variables["FMREFINRATIOX"][0]
+                    gamma_y = src.variables["FMREFINRATIOY"][0]
                     # fire grid size
                     Lmax = gamma_x * len(grid_u_x)
                     Mmax = gamma_y * len(grid_v_y)
