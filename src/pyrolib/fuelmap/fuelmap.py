@@ -79,7 +79,7 @@ class FuelMap:
     namelistname : str, optional
         MesoNH namelist name (default: 'EXSEG1.nam').
     MesoNHversion : str, optional
-            Version of MesoNH needed (>=5.4.4) (default: '5.5.0')
+            Version of MesoNH needed (>=5.6.0) (default: '5.6.0')
 
 
     """
@@ -88,7 +88,7 @@ class FuelMap:
         self,
         fuel_db: FuelDatabase,
         namelistname: str = "EXSEG1.nam",
-        MesoNHversion: str = "5.5.0",
+        MesoNHversion: str = "5.6.0",
         workdir: str = "",
     ):
         self.fuel_db = fuel_db
