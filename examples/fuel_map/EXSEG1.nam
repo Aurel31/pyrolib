@@ -1,6 +1,6 @@
 &NAM_LUNITn  CINIFILE = 'Init_file' /
 
-&NAM_FIRE LFIREMODEL = .T.,
-          NREFINX = 1,
-          NREFINY = 1,
-          CPROPAG_MODEL = 'SANTONI2011' /
+&NAM_FIREn LFIREMODEL = .T.,
+           NREFINX = 1,
+           NREFINY = 1,
+           CPROPAG_MODEL = 'SANTONI2011' /
