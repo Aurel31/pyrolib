@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+
+## [0.4.1] 2022 / 09 / 21
+### Changed
+- Default version is 5.6.0
+- The following Balze variables are renamed:
+  - LSPHI -> FMPHI
+  - FIRERW -> FMROS
+  - FMR0 -> FMROS0
+  - BMAP -> FMBMAP
+
 ## [0.4.0] 2022 / 09 / 13
 **Warning**: Backward compatibility with MesoNH version < 5.6 is not guaranteed anymore.
 
