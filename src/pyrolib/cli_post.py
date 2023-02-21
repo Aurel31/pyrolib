@@ -149,10 +149,10 @@ def rearrange_netcdf(files, remove):
 main_cli.add_command(rearrange_netcdf)
 
 LIST_FIRE_FIELD = [
-    "LSPHI",
-    "BMAP",
-    "FMR0",
-    "FIRERW",
+    "FMPHI",
+    "FMBMAP",
+    "FMROS0",
+    "FMROS",
     "FMASE",
     "FMAWC",
     "FMFLUXHDH",
