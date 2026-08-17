@@ -7,6 +7,7 @@ import pyrolib.fuelmap as pl
 from pyrolib.fuelmap.fuels import FuelProperty
 from pyrolib.fuelmap.utility import convert_lon_lat_to_x_y
 from numpy import isclose
+from math import cos, radians
 
 """
 Parameter
@@ -175,7 +176,53 @@ def test_convert_lon_lat_2_x_y_mercator_no_rotation():
     assert isclose(xpos[0], 0)
     assert isclose(xpos[1], 111198.9234485458)
     assert isclose(ypos[0], 0)
-    assert isclose(ypos[1], 160434.28079762892)
+    # Reference value from SM_XYHAT_S (MNH mode_gridproj.f90):
+    # XRADIUS * COS(XLAT0) * LOG(TAN(pi/4 + lat/2)), with XRADIUS = 6371229 m.
+    assert isclose(ypos[1], 111204.56940003937)
+
+
+def test_convert_lon_lat_2_x_y_mercator_no_rotation_mid_latitude():
+    # Origin away from the equator, so a wrong isometric latitude cannot be
+    # hidden by an origin offset of the same (wrong) scale.
+    confproj = {
+        "beta": 0.0,
+        "k": 0.0,
+        "lat_ori": 43.29,
+        "lon_ori": 0.0,
+        "lat0": 43.29,
+        "lon0": 0.0,
+    }
+    lon_tgt = [0.0, 0.05]
+    lat_tgt = [43.29, 43.35]
+    xpos, ypos = convert_lon_lat_to_x_y(confproj, lat_tgt, lon_tgt)
+
+    assert isclose(xpos[0], 0)
+    assert isclose(xpos[1], 4047.0428104878883)
+    assert isclose(ypos[0], 0)
+    assert isclose(ypos[1], 6675.229672590271)
+
+
+def test_convert_lon_lat_2_x_y_mercator_is_conformal():
+    # Mercator is conformal: at the reference latitude a small displacement in
+    # longitude and the same displacement in latitude must map to equal
+    # distances. This fails by a factor log2(e) if the isometric latitude is
+    # computed with a logarithm of the wrong base.
+    lat0 = 43.29
+    confproj = {
+        "beta": 0.0,
+        "k": 0.0,
+        "lat_ori": lat0,
+        "lon_ori": 0.0,
+        "lat0": lat0,
+        "lon0": 0.0,
+    }
+    # rtol accommodates the second-order term of the finite difference,
+    # which is of order tan(lat0) * delta / 2.
+    delta = 1.0e-3
+    xpos, ypos = convert_lon_lat_to_x_y(confproj, [lat0, lat0 + delta], [0.0, delta])
+
+    assert isclose(ypos[1], xpos[1] / cos(radians(lat0)), rtol=1e-4)
+
 
 def test_convert_lon_lat_2_x_y_mercator_rotation():
     confproj = {

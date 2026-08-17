@@ -149,12 +149,16 @@ def convert_lon_lat_to_x_y(confproj: dict, lat: tuple, lon: tuple):
 
     # get position of origin (x_ori, y_ori)
     if np.isclose(confproj["beta"], 0.0) and np.isclose(confproj["k"], 0.0):
-        # Mercator projection without rotation
+        # Mercator projection without rotation.
+        # The isometric latitude uses the natural logarithm: SM_XYHAT_S in MNH
+        # mode_gridproj.f90 computes it as XRADIUS * COS(XLAT0) * LOG(TAN(pi/4 + lat/2)),
+        # and Fortran LOG is ln. Here tan(pi/4 - lat/2) is the reciprocal of
+        # tan(pi/4 + lat/2), hence the opposite signs below.
         x_ori = -earth_radius * cosd(confproj["lat0"]) * np.deg2rad(confproj["lon_ori"] - confproj["lon0"])
         y_ori = (
             earth_radius
             * cosd(confproj["lat0"])
-            * np.log2(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(confproj["lat_ori"]))))
+            * np.log(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(confproj["lat_ori"]))))
         )
 
         x = [
@@ -165,11 +169,11 @@ def convert_lon_lat_to_x_y(confproj: dict, lat: tuple, lon: tuple):
             y_ori
             - earth_radius
             * cosd(confproj["lat0"])
-            * np.log2(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(lat[0])))),
+            * np.log(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(lat[0])))),
             y_ori
             - earth_radius
             * cosd(confproj["lat0"])
-            * np.log2(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(lat[1])))),
+            * np.log(np.abs(np.tan(0.25 * np.pi - 0.5 * np.deg2rad(lat[1])))),
         ]
 
         return x, y

@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
+## [Unreleased]
+### Bug fix
+- `convert_lon_lat_to_x_y` used a base-2 logarithm instead of the natural one, so
+  patches positioned in lon/lat were placed off by a factor `log2(e)` on the `y`
+  axis.
+
 ## [0.5.0] 2026 / 08 / 12
 **Warning**: the default `Méso-NH` version is now `6.1.0`. Runs targeting `5.6.0`
 must pass `MesoNHversion="5.6.0"` explicitly to `FuelMap`.
