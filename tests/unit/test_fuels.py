@@ -224,30 +224,65 @@ def test_convert_lon_lat_2_x_y_mercator_is_conformal():
     assert isclose(ypos[1], xpos[1] / cos(radians(lat0)), rtol=1e-4)
 
 
-def test_convert_lon_lat_2_x_y_mercator_rotation():
-    confproj = {
-        "beta": 1.0,
-        "k": 0.0,
-        "lat_ori": 0.0,
-        "lon_ori": 0.0,
-        "lat0": 0.0,
-        "lon0": 0.0,
-    }
-    lon_tgt = [0.0, 1.0]
-    lat_tgt = [0.0, 1.0]
-    with pytest.raises(NotImplementedError):
-        convert_lon_lat_to_x_y(confproj, lat_tgt, lon_tgt)
+# Reference values below come from SM_XYHAT_S (Méso-NH 6.1.0, mode_gridproj.f90)
+# compiled in double precision with XRADIUS = 6371229 m, as
+# (LAT0, LON0, BETA, RPK, LATORI, LONORI, lat, lon) -> (x, y).
+SM_XYHAT_S_REFERENCE = [
+    # Mercator with rotation
+    ((43.29, 0.0, 15.0, 0.0, 43.29, 0.0), (43.35, 0.05), (5636.8197404476549, 5400.3249814668763)),
+    # Lambert conformal from the south pole (0 < RPK < 1), without and with rotation
+    ((45.0, 2.0, 0.0, 0.70710678118654752, 44.5, 1.2), (45.3, 2.4), (94738.519948511129, 88723.987104003834)),
+    ((45.0, 2.0, 10.0, 0.70710678118654752, 44.5, 1.2), (45.3, 2.4), (108705.98763014999, 70924.899034257055)),
+    # Lambert conformal from the north pole (-1 < RPK < 0), without and with rotation
+    ((-33.0, 151.0, 0.0, -0.5446390350150271, -33.5, 150.5), (-32.8, 151.6), (102447.29528285678, 77790.251334401960)),
+    ((-33.0, 151.0, -5.0, -0.5446390350150271, -33.5, 150.5), (-32.8, 151.6), (95277.585261044604, 86423.106055421606)),
+    # polar-stereographic from the south pole (RPK = 1) and from the north pole (RPK = -1)
+    ((80.0, -45.0, 0.0, 1.0, 78.0, -50.0), (81.0, -40.0), (202580.30391793877, 332607.01753211052)),
+    ((-80.0, 120.0, 0.0, -1.0, -78.0, 115.0), (-81.0, 125.0), (202580.30391793877, -332607.01753211052)),
+    # longitude wrapping across the antimeridian, Lambert and Mercator
+    ((45.0, 179.0, 0.0, 0.70710678118654752, 44.5, 178.0), (45.3, -179.5), (196633.69065041355, 89556.516492208905)),
+    ((45.0, 179.0, 0.0, 0.0, 44.5, 178.0), (45.3, -179.5), (196573.78207777632, 88806.435552757520)),
+]
 
-def test_convert_lon_lat_2_x_y_conformal():
-    confproj = {
-        "beta": 1.0,
-        "k": 1.0,
-        "lat_ori": 0.0,
-        "lon_ori": 0.0,
-        "lat0": 0.0,
-        "lon0": 0.0,
-    }
-    lon_tgt = [0.0, 1.0]
-    lat_tgt = [0.0, 1.0]
-    with pytest.raises(NotImplementedError):
-        convert_lon_lat_to_x_y(confproj, lat_tgt, lon_tgt)
+
+def make_confproj(lat0, lon0, beta, rpk, lat_ori, lon_ori):
+    return {"beta": beta, "k": rpk, "lat_ori": lat_ori, "lon_ori": lon_ori, "lat0": lat0, "lon0": lon0}
+
+
+@pytest.mark.parametrize("projection, point, expected", SM_XYHAT_S_REFERENCE)
+def test_convert_lon_lat_2_x_y_matches_sm_xyhat_s(projection, point, expected):
+    confproj = make_confproj(*projection)
+    lat, lon = point
+    xpos, ypos = convert_lon_lat_to_x_y(confproj, [lat], [lon])
+
+    assert isclose(xpos[0], expected[0], rtol=0, atol=1e-6)
+    assert isclose(ypos[0], expected[1], rtol=0, atol=1e-6)
+
+
+@pytest.mark.parametrize("projection", [projection for projection, _, _ in SM_XYHAT_S_REFERENCE])
+def test_convert_lon_lat_2_x_y_origin_maps_to_zero(projection):
+    # (LONORI, LATORI) is by definition the geographical position of the x = 0, y = 0 point
+    confproj = make_confproj(*projection)
+    xpos, ypos = convert_lon_lat_to_x_y(confproj, [confproj["lat_ori"]], [confproj["lon_ori"]])
+
+    assert isclose(xpos[0], 0.0, atol=1e-6)
+    assert isclose(ypos[0], 0.0, atol=1e-6)
+
+
+def test_convert_lon_lat_2_x_y_is_vectorized():
+    confproj = make_confproj(45.0, 2.0, 10.0, 0.70710678118654752, 44.5, 1.2)
+    lat = [44.5, 45.3, 45.3]
+    lon = [1.2, 2.4, 1.2]
+    xpos, ypos = convert_lon_lat_to_x_y(confproj, lat, lon)
+
+    assert xpos.shape == ypos.shape == (3,)
+    for i in range(3):
+        x_i, y_i = convert_lon_lat_to_x_y(confproj, [lat[i]], [lon[i]])
+        assert xpos[i] == x_i[0]
+        assert ypos[i] == y_i[0]
+
+
+def test_convert_lon_lat_2_x_y_rejects_invalid_rpk():
+    confproj = make_confproj(45.0, 2.0, 0.0, 1.5, 44.5, 1.2)
+    with pytest.raises(ValueError, match="RPK = 1.5"):
+        convert_lon_lat_to_x_y(confproj, [45.0], [2.0])
