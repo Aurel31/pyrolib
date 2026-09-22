@@ -207,6 +207,35 @@ class FuelMap:
         )
         self.yfiremesh += 0.5 * (self.yfiremesh[1] - self.yfiremesh[0])
 
+    def __patch_position(self, pos1: tuple, pos2: tuple, is_cartesian: bool):
+        """Return the (x, y) positions of a patch, converting from (lon, lat) if needed
+
+        Parameters
+        ----------
+
+        pos1 : tuple
+            x (or longitude) positions
+        pos2 : tuple
+            y (or latitude) positions
+        is_cartesian : bool
+            pos1 and pos2 are given with (x, y) instead of (lon, lat)
+
+        Raises
+        ------
+        ValueError
+            if positions are given in (lon, lat) but the initialization file has no
+            conformal projection (cartesian Méso-NH domain)
+        """
+        if is_cartesian:
+            return pos1, pos2
+        if self.confproj is None:
+            raise ValueError(
+                f"{self.mnhinifile:s}.nc has no conformal projection variables "
+                "(BETA, RPK, LATORI, LONORI, LAT0, LON0): the domain is cartesian, "
+                "positions must be given in (x, y) with is_cartesian=True"
+            )
+        return convert_lon_lat_to_x_y(confproj=self.confproj, lat=pos2, lon=pos1)
+
     def __add_rectangle_patch(
         self,
         pos1: tuple,
@@ -267,12 +296,7 @@ class FuelMap:
         is_cartesian : bool, optional
             pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
-        # convert lon, lat into x, y if necessary
-        if is_cartesian:
-            xpos = pos1
-            ypos = pos2
-        else:
-            xpos, ypos = convert_lon_lat_to_x_y(confproj=self.confproj, lat=pos2, lon=pos1)
+        xpos, ypos = self.__patch_position(pos1, pos2, is_cartesian)
 
         # Create mask
         P = RectanglePatch(
@@ -476,11 +500,7 @@ class FuelMap:
         is_cartesian : bool, optional
             pos1 and pos2 are given with (x, y) instead of (lon, lat) (default: True)
         """
-        if is_cartesian:
-            xpos = pos1
-            ypos = pos2
-        else:
-            xpos, ypos = convert_lon_lat_to_x_y(confproj=self.confproj, lat=pos2, lon=pos1)
+        xpos, ypos = self.__patch_position(pos1, pos2, is_cartesian)
 
         # Create mask
         patch = LinePatch(self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize)

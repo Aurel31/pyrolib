@@ -6,7 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
 ## [Unreleased]
+### Added
+- patches positioned in (lon, lat) (`is_cartesian=False`) work on every `Méso-NH`
+  projection: `convert_lon_lat_to_x_y` is a full port of `SM_XYHAT_S` (Mercator,
+  Lambert conformal and polar-stereographic from either pole, with `BETA` rotation)
+  instead of raising `NotImplementedError` outside the unrotated Mercator case.
+
 ### Changed
+- `is_cartesian=False` on a cartesian domain (initialization file without `RPK`,
+  `LATORI`, `LONORI`) raises a `ValueError` naming the file instead of a `TypeError`.
 - `FuelMap.dump_mesonh` and `FuelMap.dump` share one netCDF header and fire-field
   writer, so `FuelMap.nc` and `FuelMap2d.nc` can no longer diverge. The files
   written are unchanged.

@@ -47,10 +47,10 @@ my_fuelmap = FuelMap(fuel_db=my_db)
 
 # add a fuel patch of the tall grass fuel from the FireFluxI database
 ## to show the available fuel keys of the database, use print(my_db)
-my_fuelmap.add_fuel_rectangle_patch(xpos=[50, 450], ypos=[50, 450], fuel_key="FireFluxI_tall_grass")
+my_fuelmap.add_fuel_rectangle_patch(pos1=[50, 450], pos2=[50, 450], fuel_key="FireFluxI_tall_grass")
 
 # add a ignition patch
-my_fuelmap.add_ignition_rectangle_patch(xpos=[100, 105], ypos=[245, 255], ignition_time=10)
+my_fuelmap.add_ignition_rectangle_patch(pos1=[100, 105], pos2=[245, 255], ignition_time=10)
 
 # dump for mesonh
 my_fuelmap.dump_mesonh()
@@ -69,3 +69,23 @@ example/
 ```
 
 `FuelMap2d.nc` is an optional file that is easier for human to chack if the generated fuel map respects the requirements.
+
+## position patches in longitude and latitude
+
+By default, patch positions are conformal coordinates $(x, y)$ in meters, in the frame of `XHAT` and `YHAT`.
+When the `Méso-NH` domain is not cartesian (`LCARTESIAN = .F.`),
+positions can be given as $(\text{lon}, \text{lat})$ in degrees with `is_cartesian=False`:
+
+```python
+# corners given as longitudes (pos1) and latitudes (pos2)
+my_fuelmap.add_fuel_rectangle_patch(pos1=[0.0006, 0.0055], pos2=[43.2905, 43.2940], fuel_key="FireFluxI_tall_grass", is_cartesian=False)
+my_fuelmap.add_ignition_rectangle_patch(pos1=[0.0012, 0.0013], pos2=[43.2922, 43.2923], ignition_time=10, is_cartesian=False)
+```
+
+The conversion reproduces `SM_XYHAT_S` of `Méso-NH` (`mode_gridproj.f90`) on a spherical earth of radius 6371229 m,
+from the projection parameters stored in the initialization file: `LAT0`, `LON0`, `RPK`, `BETA`, `LATORI` and `LONORI`.
+Every `Méso-NH` projection is supported: Mercator (`RPK = 0`), Lambert conformal (`0 < |RPK| < 1`)
+and polar-stereographic (`|RPK| = 1`), from either pole, with any rotation `BETA`.
+
+The initialization file of a cartesian domain (as `Init_file.nc` in the example) has no `RPK`, `LATORI` nor `LONORI`:
+`is_cartesian=False` then raises a `ValueError`, positions must be given in $(x, y)$.
