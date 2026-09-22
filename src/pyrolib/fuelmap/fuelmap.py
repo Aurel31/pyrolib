@@ -790,100 +790,24 @@ class FuelMap:
     def dump_mesonh(self, verbose: int = 0):
         """Write Fuel map as netCFD file named FuelMap.nc for Méso-NH
 
+        Fire fields are stored on the ``(F, Y, X)`` grid expected by the Blaze reader
+        (see :func:`~pyrolib.fuelmap.utility.fire_array_2d_to_3d`).
+        The ``<cinifile>.des`` file is copied to ``FuelMap.des`` alongside.
+
         Parameters
         ----------
 
         verbose : int, optional
             verbose level (0: no prints, 1: low verbosity, 2: high verbosity) (default: 0)
         """
-        if self.workdir == "":
-            projectpath = os.getcwd()
-        else:
-            projectpath = self.workdir
+        projectpath = self.__get_project_path()
 
         # copy .des file
         copy2(f"{projectpath:s}/{self.mnhinifile:s}.des", f"{projectpath:s}/FuelMap.des")
 
-        # Create new netcdf file to store fuel data
-        if verbose >= 1:
-            print(f">>> Create FuelMap.nc")
-
-        NewFile = Dataset(f"{projectpath:s}/FuelMap.nc", "w")
-
-        if verbose >= 2:
-            print(f">> Store MesoNH file info")
-
-        # need to be compliant with MesoNH output files nomenclature
-        NewFile.Conventions = "CF-1.7 COMODO-1.4"
-        NewFile.MNH_REAL = "8"
-        NewFile.MNH_INT = "4"
-        NewFile.MNH_cleanly_closed = "yes"
-        NewFile.MNH_REDUCE_DIMENSIONS_IN_FILES = "1"
-        # Mandatory for files declaring MesoNH >= 5.7.1: IO_Check_precision_loss_nc4
-        # (mode_io_file_nc4.f90) aborts the run when it is absent. "0" means no
-        # reduction of float precision, which is what this writer does.
-        NewFile.MNH_REDUCE_FLOAT_PRECISION = "0"
-        NewFile.MNH_COMPRESS_LOSSY = "0"
-
-        NewFile.createDimension("X", self.nx)
-        NewFile.createDimension("Y", self.ny)
-        NewFile.createDimension("F", self.nrefinx * self.nrefiny)
-        NewFile.createDimension("size3", 3)
-        NewFile.createDimension("char16", 16)
-
-        # MesoNH stores integers on 4 bytes (see the MNH_INT attribute above).
-        MNHversion = np.array(self.mnh_version.split("."), dtype=np.int32)
-
-        # Since MesoNH 6.0.0 the version is read from these global attributes
-        # (IO_mnhversion_attributes_read_nc4). The variables below are the
-        # legacy fallback used by older versions.
-        NewFile.MNH_VERSION = MNHversion
-        NewFile.MNH_VERSION_STR = self.mnh_version
-        NewFile.MNH_VERSION_USER = ""
-
-        varia = NewFile.createVariable("MNHVERSION", np.int32, ("size3"), fill_value=-2147483647)
-        varia.long_name = "MesoNH version"
-        varia.valid_min = np.intc(-2147483646)
-        varia.valid_max = np.intc(2147483647)
-        varia[:] = MNHversion
-
-        # MASDEV packs major and minor as read back by IO_Mnhversion_get:
-        # major * 10 + minor, or major * 100 + minor for minor >= 10.
-        varia = NewFile.createVariable("MASDEV", np.int32, ())
-        varia.long_name = "MesoNH version (without bugfix)"
-        varia[...] = MNHversion[0] * (100 if MNHversion[1] >= 10 else 10) + MNHversion[1]
-
-        varia = NewFile.createVariable("BUGFIX", np.int32, ())
-        varia.long_name = "MesoNH bugfix number"
-        varia[...] = MNHversion[2]
-
-        varia = NewFile.createVariable("STORAGE_TYPE", "c", ("char16"))
-        varia.long_name = "STORAGE_TYPE"
-        varia.comment = "Storage type for the information written in the FM files"
-        varia[:] = "TT              "
-
-        varia = NewFile.createVariable("FILETYPE", "c", ("char16"))
-        varia.long_name = "type of this file"
-        varia[:] = "BlazeData       "
-
-        # x grid
-        if verbose >= 2:
-            print(f">> Store grid")
-
-        ni = NewFile.createVariable("X", np.float64, ("X"))
-        ni.long_name = "x-dimension of the grid"
-        ni.standard_name = "x_coordinate"
-        ni.units = "m"
-        ni.axis = "X"
-        ni[:] = self.xhat
-
-        # y grid
-        nj = NewFile.createVariable("Y", np.float64, ("Y"))
-        nj.long_name = "y-dimension of the grid"
-        nj.standard_name = "y_coordinate"
-        nj.units = "m"
-        nj.axis = "Y"
-        nj[:] = self.yhat
+        NewFile = self.__create_mesonh_file(
+            f"{projectpath:s}/FuelMap.nc", {"F": self.nrefinx * self.nrefiny}, verbose
+        )
 
         # fire grid
         firelevel = NewFile.createVariable("F", np.float64, ("F"))
@@ -891,72 +815,15 @@ class FuelMap:
         firelevel.standard_name = " "
         firelevel[:] = np.array(np.arange(0, self.nrefinx * self.nrefiny), dtype=np.float64)
 
-        # ignition map
-        if verbose >= 2:
-            print(f">> Store ignition map")
-
-        IgnitionNC = NewFile.createVariable("Ignition", np.float64, ("F", "Y", "X"))
-        IgnitionNC.comment = "Ignition map"
-        IgnitionNC.grid = np.intc(4)
-        IgnitionNC.standard_name = " "
-        IgnitionNC.long_name = "Ignition time"
-        IgnitionNC.units = "s"
-        IgnitionNC[:, :, :] = fire_array_2d_to_3d(
-            self.ignitionmaparray, self.nx, self.ny, self.nrefinx, self.nrefiny
+        self.__write_fire_fields(
+            NewFile,
+            ("F", "Y", "X"),
+            lambda array: fire_array_2d_to_3d(array, self.nx, self.ny, self.nrefinx, self.nrefiny),
+            verbose,
         )
-
-        # walking ignition map
-        if verbose >= 2:
-            print(f">> Store walking ignition map")
-        IgnitionNC = NewFile.createVariable("WalkingIgnition", np.float64, ("F", "Y", "X"))
-        IgnitionNC.comment = "WalkingIgnition map"
-        IgnitionNC.grid = np.intc(4)
-        IgnitionNC.standard_name = " "
-        IgnitionNC.long_name = "Walking ignition time"
-        IgnitionNC.units = "s"
-        IgnitionNC[:, :, :] = fire_array_2d_to_3d(
-            self.walkingignitionmaparray, self.nx, self.ny, self.nrefinx, self.nrefiny
-        )
-
-        # fuel type map
-        if verbose >= 2:
-            print(f">> Store fuel type map")
-        FuelMap = NewFile.createVariable("Fuel_type", np.float64, ("F", "Y", "X"))
-        FuelMap.standard_name = " "
-        FuelMap.long_name = "Fuel_type"
-        FuelMap.comment = "Fuel type"
-        FuelMap.units = "1"
-        FuelMap.grid = np.intc(4)
-        FuelMap[:, :, :] = fire_array_2d_to_3d(
-            self.fuelmaparray[0, :, :], self.nx, self.ny, self.nrefinx, self.nrefiny
-        )
-
-        # Write each fuel as 3d table
-        if verbose >= 2:
-            print(f">> Store properties maps")
-        chosen_fuel_class = getattr(
-            sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]
-        )()
-        for propertyname in vars(chosen_fuel_class):
-            propertyobj = getattr(chosen_fuel_class, propertyname)
-            if propertyobj.propertyindex is not None:
-                fuelname = propertyobj.name
-                FuelMap = NewFile.createVariable(fuelname, np.float64, ("F", "Y", "X"))
-                FuelMap.standard_name = " "
-                FuelMap.long_name = propertyobj.name
-                FuelMap.comment = propertyobj.description
-                FuelMap.units = propertyobj.unit
-                FuelMap.grid = np.intc(4)
-                FuelMap[:, :, :] = fire_array_2d_to_3d(
-                    self.fuelmaparray[propertyobj.propertyindex, :, :],
-                    self.nx,
-                    self.ny,
-                    self.nrefinx,
-                    self.nrefiny,
-                )
 
         if verbose >= 1:
-            print(f">>> Close FuelMap.nc")
+            print(">>> Close FuelMap.nc")
 
         NewFile.close()
         self.__show_fuel_index_correspondance()
@@ -964,97 +831,22 @@ class FuelMap:
     def dump(self, verbose: int = 0):
         """Write 2D Fuel map as netCFD file named FuelMap2d.nc
 
+        Same content as :func:`dump_mesonh` but fire fields are stored on the
+        human-readable 2D fire grid ``(YFIRE, XFIRE)``. Méso-NH does not read this file.
+
         Parameters
         ----------
 
         verbose : int, optional
             verbose level (0: no prints, 1: low verbosity, 2: high verbosity) (default: 0)
         """
-        if self.workdir == "":
-            projectpath = os.getcwd()
-        else:
-            projectpath = self.workdir
+        projectpath = self.__get_project_path()
 
-        if verbose >= 1:
-            print(f">>> Create FuelMap2d.nc")
-
-        NewFile = Dataset(f"{projectpath:s}/FuelMap2d.nc", "w")
-
-        if verbose >= 2:
-            print(f">> Store MesoNH file info")
-
-        # need to be compliant with MesoNH output files nomenclature
-        NewFile.Conventions = "CF-1.7 COMODO-1.4"
-        NewFile.MNH_REAL = "8"
-        NewFile.MNH_INT = "4"
-        NewFile.MNH_cleanly_closed = "yes"
-        NewFile.MNH_REDUCE_DIMENSIONS_IN_FILES = "1"
-        # Mandatory for files declaring MesoNH >= 5.7.1: IO_Check_precision_loss_nc4
-        # (mode_io_file_nc4.f90) aborts the run when it is absent. "0" means no
-        # reduction of float precision, which is what this writer does.
-        NewFile.MNH_REDUCE_FLOAT_PRECISION = "0"
-        NewFile.MNH_COMPRESS_LOSSY = "0"
-
-        NewFile.createDimension("X", self.nx)
-        NewFile.createDimension("Y", self.ny)
-        NewFile.createDimension("XFIRE", self.nx * self.nrefinx)
-        NewFile.createDimension("YFIRE", self.ny * self.nrefiny)
-        NewFile.createDimension("size3", 3)
-        NewFile.createDimension("char16", 16)
-
-        # MesoNH stores integers on 4 bytes (see the MNH_INT attribute above).
-        MNHversion = np.array(self.mnh_version.split("."), dtype=np.int32)
-
-        # Since MesoNH 6.0.0 the version is read from these global attributes
-        # (IO_mnhversion_attributes_read_nc4). The variables below are the
-        # legacy fallback used by older versions.
-        NewFile.MNH_VERSION = MNHversion
-        NewFile.MNH_VERSION_STR = self.mnh_version
-        NewFile.MNH_VERSION_USER = ""
-
-        varia = NewFile.createVariable("MNHVERSION", np.int32, ("size3"), fill_value=-2147483647)
-        varia.long_name = "MesoNH version"
-        varia.valid_min = np.intc(-2147483646)
-        varia.valid_max = np.intc(2147483647)
-        varia[:] = MNHversion
-
-        # MASDEV packs major and minor as read back by IO_Mnhversion_get:
-        # major * 10 + minor, or major * 100 + minor for minor >= 10.
-        varia = NewFile.createVariable("MASDEV", np.int32, ())
-        varia.long_name = "MesoNH version (without bugfix)"
-        varia[...] = MNHversion[0] * (100 if MNHversion[1] >= 10 else 10) + MNHversion[1]
-
-        varia = NewFile.createVariable("BUGFIX", np.int32, ())
-        varia.long_name = "MesoNH bugfix number"
-        varia[...] = MNHversion[2]
-
-        varia = NewFile.createVariable("STORAGE_TYPE", "c", ("char16"))
-        varia.long_name = "STORAGE_TYPE"
-        varia.comment = "Storage type for the information written in the FM files"
-        varia[:] = "TT              "
-
-        varia = NewFile.createVariable("FILETYPE", "c", ("char16"))
-        varia.long_name = "type of this file"
-        varia[:] = "BlazeData       "
-
-        # x grid
-        if verbose >= 2:
-            print(f">> Store grid")
-
-        ni = NewFile.createVariable("X", np.float64, ("X"))
-        ni.long_name = "x-dimension of the grid"
-        ni.standard_name = "x_coordinate"
-        ni.units = "m"
-        ni.axis = "X"
-        ni[:] = self.xhat
-
-        # y grid
-        nj = NewFile.createVariable("Y", np.float64, ("Y"))
-        nj.long_name = "y-dimension of the grid"
-        nj.standard_name = "y_coordinate"
-        nj.units = "m"
-        nj.axis = "Y"
-        nj[:] = self.yhat
+        NewFile = self.__create_mesonh_file(
+            f"{projectpath:s}/FuelMap2d.nc",
+            {"XFIRE": self.nx * self.nrefinx, "YFIRE": self.ny * self.nrefiny},
+            verbose,
+        )
 
         # fire grid
         firegrid = NewFile.createVariable("XFIRE", np.float64, ("XFIRE"))
@@ -1071,63 +863,185 @@ class FuelMap:
         firegrid.unit = "m"
         firegrid[:] = self.yfiremesh
 
-        # ignition map
-        if verbose >= 2:
-            print(f">> Store ignition map")
+        self.__write_fire_fields(NewFile, ("YFIRE", "XFIRE"), lambda array: array, verbose)
 
-        IgnitionNC = NewFile.createVariable("Ignition", np.float64, ("YFIRE", "XFIRE"))
-        IgnitionNC.comment = "Ignition map"
-        IgnitionNC.grid = np.intc(4)
-        IgnitionNC.standard_name = " "
-        IgnitionNC.long_name = "Ignition time"
-        IgnitionNC.units = "s"
-        IgnitionNC[:, :] = self.ignitionmaparray
+        if verbose >= 1:
+            print(">>> Close FuelMap2d.nc")
 
-        # walking ignition map
-        if verbose >= 2:
-            print(f">> Store walking ignition map")
-        IgnitionNC = NewFile.createVariable("WalkingIgnition", np.float64, ("YFIRE", "XFIRE"))
-        IgnitionNC.comment = "WalkingIgnition map"
-        IgnitionNC.grid = np.intc(4)
-        IgnitionNC.standard_name = " "
-        IgnitionNC.long_name = "Walking ignition time"
-        IgnitionNC.units = "s"
-        IgnitionNC[:, :] = self.walkingignitionmaparray
+        NewFile.close()
+        self.__show_fuel_index_correspondance()
 
-        # fuel type map
-        if verbose >= 2:
-            print(f">> Store fuel type map")
-        FuelMap = NewFile.createVariable("Fuel_type", np.float64, ("YFIRE", "XFIRE"))
-        FuelMap.standard_name = " "
-        FuelMap.long_name = "Fuel_type"
-        FuelMap.comment = "Fuel type"
-        FuelMap.grid = np.intc(4)
-        FuelMap.units = "1"
-        FuelMap[:, :] = self.fuelmaparray[0, :, :]
+    def __get_project_path(self) -> str:
+        """Return the directory holding the Méso-NH files (``workdir`` or the current directory)"""
+        if self.workdir == "":
+            return os.getcwd()
+        return self.workdir
 
-        # Write each fuel as 3d table
+    def __create_mesonh_file(self, filename: str, fire_dimensions: dict, verbose: int = 0) -> Dataset:
+        """Create a netCDF file with the header shared by FuelMap.nc and FuelMap2d.nc
+
+        Writes the global attributes, dimensions, version metadata and atmospheric grid
+        following MesoNH output files nomenclature. Fire-grid coordinate variables and
+        fire fields are left to the caller.
+
+        Parameters
+        ----------
+
+        filename : str
+            path of the netCDF file to create
+        fire_dimensions : dict
+            fire grid dimensions to create, as ``{name: size}``
+        verbose : int, optional
+            verbose level (0: no prints, 1: low verbosity, 2: high verbosity) (default: 0)
+
+        Returns
+        -------
+
+        netCDF4.Dataset
+            the open file, in write mode
+        """
+        if verbose >= 1:
+            print(f">>> Create {os.path.basename(filename):s}")
+
+        NewFile = Dataset(filename, "w")
+
         if verbose >= 2:
-            print(f">> Store properties maps")
+            print(">> Store MesoNH file info")
+
+        # need to be compliant with MesoNH output files nomenclature
+        NewFile.Conventions = "CF-1.7 COMODO-1.4"
+        NewFile.MNH_REAL = "8"
+        NewFile.MNH_INT = "4"
+        NewFile.MNH_cleanly_closed = "yes"
+        NewFile.MNH_REDUCE_DIMENSIONS_IN_FILES = "1"
+        # Mandatory for files declaring MesoNH >= 5.7.1: IO_Check_precision_loss_nc4
+        # (mode_io_file_nc4.f90) aborts the run when it is absent. "0" means no
+        # reduction of float precision, which is what this writer does.
+        NewFile.MNH_REDUCE_FLOAT_PRECISION = "0"
+        NewFile.MNH_COMPRESS_LOSSY = "0"
+
+        NewFile.createDimension("X", self.nx)
+        NewFile.createDimension("Y", self.ny)
+        for name, size in fire_dimensions.items():
+            NewFile.createDimension(name, size)
+        NewFile.createDimension("size3", 3)
+        NewFile.createDimension("char16", 16)
+
+        # MesoNH stores integers on 4 bytes (see the MNH_INT attribute above).
+        MNHversion = np.array(self.mnh_version.split("."), dtype=np.int32)
+
+        # Since MesoNH 6.0.0 the version is read from these global attributes
+        # (IO_mnhversion_attributes_read_nc4). The variables below are the
+        # legacy fallback used by older versions.
+        NewFile.MNH_VERSION = MNHversion
+        NewFile.MNH_VERSION_STR = self.mnh_version
+        NewFile.MNH_VERSION_USER = ""
+
+        varia = NewFile.createVariable("MNHVERSION", np.int32, ("size3"), fill_value=-2147483647)
+        varia.long_name = "MesoNH version"
+        varia.valid_min = np.intc(-2147483646)
+        varia.valid_max = np.intc(2147483647)
+        varia[:] = MNHversion
+
+        # MASDEV packs major and minor as read back by IO_Mnhversion_get:
+        # major * 10 + minor, or major * 100 + minor for minor >= 10.
+        varia = NewFile.createVariable("MASDEV", np.int32, ())
+        varia.long_name = "MesoNH version (without bugfix)"
+        varia[...] = MNHversion[0] * (100 if MNHversion[1] >= 10 else 10) + MNHversion[1]
+
+        varia = NewFile.createVariable("BUGFIX", np.int32, ())
+        varia.long_name = "MesoNH bugfix number"
+        varia[...] = MNHversion[2]
+
+        varia = NewFile.createVariable("STORAGE_TYPE", "c", ("char16"))
+        varia.long_name = "STORAGE_TYPE"
+        varia.comment = "Storage type for the information written in the FM files"
+        varia[:] = "TT              "
+
+        varia = NewFile.createVariable("FILETYPE", "c", ("char16"))
+        varia.long_name = "type of this file"
+        varia[:] = "BlazeData       "
+
+        # x grid
+        if verbose >= 2:
+            print(">> Store grid")
+
+        ni = NewFile.createVariable("X", np.float64, ("X"))
+        ni.long_name = "x-dimension of the grid"
+        ni.standard_name = "x_coordinate"
+        ni.units = "m"
+        ni.axis = "X"
+        ni[:] = self.xhat
+
+        # y grid
+        nj = NewFile.createVariable("Y", np.float64, ("Y"))
+        nj.long_name = "y-dimension of the grid"
+        nj.standard_name = "y_coordinate"
+        nj.units = "m"
+        nj.axis = "Y"
+        nj[:] = self.yhat
+
+        return NewFile
+
+    def __write_fire_fields(self, ncfile: Dataset, dimensions: tuple, pack, verbose: int = 0):
+        """Write the ignition maps, the fuel type map and every fuel property map
+
+        Parameters
+        ----------
+
+        ncfile : netCDF4.Dataset
+            open file, whose ``dimensions`` already exist
+        dimensions : tuple
+            dimensions of each fire field variable, e.g. ``("F", "Y", "X")``
+        pack : callable
+            maps a 2D fire array ``(nyf, nxf)`` to the array stored on ``dimensions``
+        verbose : int, optional
+            verbose level (0: no prints, 1: low verbosity, 2: high verbosity) (default: 0)
+        """
+
+        def write_field(name, array, long_name, comment, units):
+            field = ncfile.createVariable(name, np.float64, dimensions)
+            field.standard_name = " "
+            field.long_name = long_name
+            field.comment = comment
+            field.units = units
+            field.grid = np.intc(4)
+            field[...] = pack(array)
+
+        if verbose >= 2:
+            print(">> Store ignition map")
+        write_field("Ignition", self.ignitionmaparray, "Ignition time", "Ignition map", "s")
+
+        if verbose >= 2:
+            print(">> Store walking ignition map")
+        write_field(
+            "WalkingIgnition",
+            self.walkingignitionmaparray,
+            "Walking ignition time",
+            "WalkingIgnition map",
+            "s",
+        )
+
+        if verbose >= 2:
+            print(">> Store fuel type map")
+        write_field("Fuel_type", self.fuelmaparray[0, :, :], "Fuel_type", "Fuel type", "1")
+
+        # one variable per fuel property, at the slot given by its propertyindex
+        if verbose >= 2:
+            print(">> Store properties maps")
         chosen_fuel_class = getattr(
             sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]
         )()
         for propertyname in vars(chosen_fuel_class):
             propertyobj = getattr(chosen_fuel_class, propertyname)
             if propertyobj.propertyindex is not None:
-                fuelname = propertyobj.name
-                FuelMap = NewFile.createVariable(fuelname, np.float64, ("YFIRE", "XFIRE"))
-                FuelMap.standard_name = " "
-                FuelMap.long_name = propertyobj.name
-                FuelMap.comment = propertyobj.description
-                FuelMap.units = propertyobj.unit
-                FuelMap.grid = np.intc(4)
-                FuelMap[:, :] = self.fuelmaparray[propertyobj.propertyindex, :, :]
-
-        if verbose >= 1:
-            print(f">>> Close FuelMap2d.nc")
-
-        NewFile.close()
-        self.__show_fuel_index_correspondance()
+                write_field(
+                    propertyobj.name,
+                    self.fuelmaparray[propertyobj.propertyindex, :, :],
+                    propertyobj.name,
+                    propertyobj.description,
+                    propertyobj.unit,
+                )
 
     def __show_fuel_index_correspondance(self):
         """print fuel index correspondance dict"""

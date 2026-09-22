@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 - `is_cartesian=False` on a cartesian domain (initialization file without `RPK`,
   `LATORI`, `LONORI`) raises a `ValueError` naming the file instead of a `TypeError`.
+- `FuelMap.dump_mesonh` and `FuelMap.dump` share one netCDF header and fire-field
+  writer, so `FuelMap.nc` and `FuelMap2d.nc` can no longer diverge. The files
+  written are unchanged.
+- the functional test checks the content of `FuelMap.nc` and `FuelMap2d.nc`
+  (header, version metadata, 2D/3D packing, patch values), not only their existence.
+
 ### Bug fix
 - `convert_lon_lat_to_x_y` used a base-2 logarithm instead of the natural one, so
   patches positioned in lon/lat were placed off by a factor `log2(e)` on the `y`
