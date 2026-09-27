@@ -199,21 +199,18 @@ def test_ignition_field_values(human_file):
     assert set(np.unique(ignition)) == {10.0, 1e6}
 
 
-def test_walking_ignition_field_values(human_file):
+def test_walking_ignition_field_values(fuelmap_files, human_file):
     x, y = human_file["XFIRE"][:], human_file["YFIRE"][:]
     walking = human_file["WalkingIgnition"][:]
 
     # line from (200, 300) to (200, 350) ignited between 0 s and 100 s, -1 elsewhere
     rows, cols = np.nonzero(walking != -1)
-    assert rows.size > 1
-    assert np.all(np.abs(x[cols] - 200.0) <= x[1] - x[0])
-    assert y[rows].min() == pytest.approx(300.0, abs=y[1] - y[0])
-    assert y[rows].max() == pytest.approx(350.0, abs=y[1] - y[0])
+    assert np.all(x[cols] == 202.5)
+    np.testing.assert_allclose(y[rows], np.arange(302.5, 353.0, 5.0))
 
-    # times grow linearly along the line; the interpolation is anchored on cell
-    # centers, so both ends can overshoot by up to one cell diagonal
-    on_line = walking[rows, cols]
-    assert np.all(np.diff(on_line) > 0)
-    cell_diagonal_time = 100.0 * np.hypot(x[1] - x[0], y[1] - y[0]) / 50.0
-    assert on_line.min() == pytest.approx(0.0, abs=cell_diagonal_time)
-    assert on_line.max() == pytest.approx(100.0, abs=cell_diagonal_time)
+    # ignition time of the closest point of the segment, plus the spread over the
+    # 2.5 m from that point to the center (also 2.5 m past B for the last cell)
+    segment_times = np.array([*np.arange(5.0, 96.0, 10.0), 100.0])
+    distance = np.array([2.5] * 10 + [np.hypot(2.5, 2.5)])
+    ros = fuelmap_files["fuel"].getR()
+    np.testing.assert_allclose(walking[rows, cols], segment_times + distance / ros)

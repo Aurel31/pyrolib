@@ -3,7 +3,7 @@
 
 import sys
 import os
-from math import pow, sqrt
+from math import pow
 from shutil import copy2
 
 import numpy as np
@@ -124,6 +124,8 @@ class FuelMap:
         self.fuelmaparray = np.zeros((self.nbpropertiesfuel, self.firemeshsizes[1], self.firemeshsizes[0]))
         self.ignitionmaparray = 1e6 * np.ones((self.firemeshsizes[1], self.firemeshsizes[0]))
         self.walkingignitionmaparray = -1.0 * np.ones_like(self.ignitionmaparray)
+        # distance from each walking ignition cell center to its ignition segment
+        self.walkingignitiondistancearray = np.zeros_like(self.ignitionmaparray)
 
     def __get_info_from_namelist(self):
         """Retrieve informations on the MesoNH-Blaze run from namelist and initialization file"""
@@ -563,6 +565,15 @@ class FuelMap:
 
         The mask is determined by a bresenham algorithm.
 
+        The `WalkingIgnition` field is an arrival-time map: Blaze sets the level set of a
+        cell so that the front crosses its center when the simulation time reaches its
+        value. The ignition is assumed to walk from A to B at constant speed, then the fire
+        spreads from the segment to the cell center, so each cell of the line gets
+        `t_a + (t_b - t_a) * s / |AB| + d / R0`, where `s` is the position along AB of the
+        point P of the segment closest to the cell center, `d` the distance from P to the
+        center, and `R0` the rate of spread of the fuel in the cell
+        (see :func:`get_walking_ignition_arrival_times`).
+
 
         .. code-block:: text
 
@@ -696,7 +707,8 @@ class FuelMap:
 
             - Walking ignition times (only for LinePatch)
                 allocate ignition time from point A (x0, y0) at ta to point B (x1, y1) at tb with tb > ta
-                The ignition time along the line is linearly interpolated with the distance relative to point A.
+                The ignition time along the line is linearly interpolated at the point of the segment closest to
+                each cell center. The spread from that point to the center is added at dump time.
 
             - Ignition time
                 Modify the ignition map with the specified time.
@@ -746,20 +758,30 @@ class FuelMap:
         # case 2 : walking ignition process
         #          (only for LinePatch)
         if walkingignitiontimes is not None:
-            # compute total distance between points A and B
-            totaldist = sqrt(pow(patch.xpos[1] - patch.xpos[0], 2) + pow(patch.ypos[1] - patch.ypos[0], 2))
+            # the ignition walks from A to B at constant speed: each cell stores the time
+            # the segment is ignited at the point closest to its center, and the distance
+            # from that point to the center. The fire spread from the segment to the
+            # center is added at dump time (see get_walking_ignition_arrival_times),
+            # once the fuel of every cell is known.
+            abx = patch.xpos[1] - patch.xpos[0]
+            aby = patch.ypos[1] - patch.ypos[0]
+            totaldist2 = pow(abx, 2) + pow(aby, 2)
             # get time difference between tb and ta
             ignitiondt = walkingignitiontimes[1] - walkingignitiontimes[0]
             # compute ignition time for each line point
             for ind in patch.line:
-                # distance from A
-                dist = sqrt(
-                    pow(self.xfiremesh[ind[0]] - patch.xpos[0], 2)
-                    + pow(self.yfiremesh[ind[1]] - patch.ypos[0], 2)
-                )
+                centerx = self.xfiremesh[ind[0]] - patch.xpos[0]
+                centery = self.yfiremesh[ind[1]] - patch.ypos[0]
+                # fraction of AB covered at the point of the segment closest to the center
+                fraction = 0.0
+                if totaldist2 > 0.0:
+                    fraction = min(max((centerx * abx + centery * aby) / totaldist2, 0.0), 1.0)
                 # linear interpolation
                 self.walkingignitionmaparray[ind[1], ind[0]] = (
-                    walkingignitiontimes[0] + dist * ignitiondt / totaldist
+                    walkingignitiontimes[0] + fraction * ignitiondt
+                )
+                self.walkingignitiondistancearray[ind[1], ind[0]] = np.hypot(
+                    centerx - fraction * abx, centery - fraction * aby
                 )
             return
 
@@ -786,6 +808,39 @@ class FuelMap:
         print("WARNING:     - walkingignitiontimes not defined")
         print("WARNING:     - ignitiontime not defined")
         print("WARNING:     - unburnable not defined")
+
+    def get_walking_ignition_arrival_times(self) -> np.ndarray:
+        """Compute the `WalkingIgnition` field written by :func:`dump_mesonh` and :func:`dump`
+
+        Blaze reads `WalkingIgnition` as the time the front crosses each cell center.
+        A walking ignition line is ignited at the point P of the segment closest to the center
+        (`walkingignitionmaparray`), then the fire has to spread over the distance `d` from P to
+        the center (`walkingignitiondistancearray`). The arrival time is therefore
+        `walkingignitionmaparray + d / R0`, where `R0` is the rate of spread
+        (:func:`~pyrolib.fuelmap.fuels.BaseFuel.getR`) of the fuel assigned to the cell,
+        as defined in the fuel database (no wind and no slope unless the database sets them).
+        Cells without fuel or unburnable (`R0 = 0`) keep the ignition time of P.
+
+        The fuel is read when this method is called, so fuel patches may be added before
+        or after the walking ignition lines.
+
+        Returns
+        -------
+
+        numpy.ndarray
+            arrival times on the fire grid `(nyf, nxf)`, -1 outside walking ignition lines
+        """
+        # rate of spread of each fuel index used in the map (0: no fuel or unburnable)
+        needed_fuelclass = _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]
+        ros = np.zeros(max(self.fuel_index_correspondance.values(), default=0) + 1)
+        for fuel_key, fuelindex in self.fuel_index_correspondance.items():
+            ros[fuelindex] = self.fuel_db.fuels[fuel_key][needed_fuelclass].getR()
+        cellros = ros[self.fuelmaparray[0, :, :].astype(int)]
+
+        arrivaltimes = self.walkingignitionmaparray.copy()
+        spreading = (self.walkingignitionmaparray != -1) & (cellros > 0.0)
+        arrivaltimes[spreading] += self.walkingignitiondistancearray[spreading] / cellros[spreading]
+        return arrivaltimes
 
     def dump_mesonh(self, verbose: int = 0):
         """Write Fuel map as netCFD file named FuelMap.nc for Méso-NH
@@ -1016,7 +1071,7 @@ class FuelMap:
             print(">> Store walking ignition map")
         write_field(
             "WalkingIgnition",
-            self.walkingignitionmaparray,
+            self.get_walking_ignition_arrival_times(),
             "Walking ignition time",
             "WalkingIgnition map",
             "s",
