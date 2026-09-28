@@ -2,6 +2,7 @@
 
 import os
 import sys
+from collections.abc import Sequence
 from importlib.resources import files
 from math import pow
 from shutil import copy2
@@ -211,7 +212,7 @@ class FuelMap:
         )
         self.yfiremesh += 0.5 * (self.yfiremesh[1] - self.yfiremesh[0])
 
-    def __patch_position(self, pos1: tuple, pos2: tuple, is_cartesian: bool):
+    def __patch_position(self, pos1: Sequence[float], pos2: Sequence[float], is_cartesian: bool):
         """Return the (x, y) positions of a patch, converting from (lon, lat) if needed
 
         Parameters
@@ -242,11 +243,11 @@ class FuelMap:
 
     def __add_rectangle_patch(
         self,
-        pos1: tuple,
-        pos2: tuple,
-        fuel_key: str = None,
-        ignition_time: float = None,
-        unburnable: bool = None,
+        pos1: Sequence[float],
+        pos2: Sequence[float],
+        fuel_key: str | None = None,
+        ignition_time: float | None = None,
+        unburnable: bool | None = None,
         is_cartesian: bool = True,
     ):
         """Add rectangle patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
@@ -308,7 +309,9 @@ class FuelMap:
         # assign data
         self.__assign_data_to_data_array(P, fuel_key, None, ignition_time, unburnable)
 
-    def add_fuel_rectangle_patch(self, pos1: tuple, pos2: tuple, fuel_key: str, is_cartesian: bool = True):
+    def add_fuel_rectangle_patch(
+        self, pos1: Sequence[float], pos2: Sequence[float], fuel_key: str, is_cartesian: bool = True
+    ):
         """Add rectangle fuel patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -353,7 +356,9 @@ class FuelMap:
         """
         self.__add_rectangle_patch(pos1, pos2, fuel_key=fuel_key, is_cartesian=is_cartesian)
 
-    def add_unburnable_rectangle_patch(self, pos1: tuple, pos2: tuple, is_cartesian: bool = True):
+    def add_unburnable_rectangle_patch(
+        self, pos1: Sequence[float], pos2: Sequence[float], is_cartesian: bool = True
+    ):
         """Add rectangle unburnable patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -395,7 +400,7 @@ class FuelMap:
         self.__add_rectangle_patch(pos1, pos2, unburnable=True, is_cartesian=is_cartesian)
 
     def add_ignition_rectangle_patch(
-        self, pos1: tuple, pos2: tuple, ignition_time: float, is_cartesian: bool = True
+        self, pos1: Sequence[float], pos2: Sequence[float], ignition_time: float, is_cartesian: bool = True
     ):
         """Add rectangle patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
@@ -441,12 +446,12 @@ class FuelMap:
 
     def __add_line_patch(
         self,
-        pos1: tuple,
-        pos2: tuple,
-        fuel_key: str = None,
-        walking_ignition_times: list = None,
-        ignition_time: float = None,
-        unburnable: bool = None,
+        pos1: Sequence[float],
+        pos2: Sequence[float],
+        fuel_key: str | None = None,
+        walking_ignition_times: Sequence[float] | None = None,
+        ignition_time: float | None = None,
+        unburnable: bool | None = None,
         is_cartesian: bool = True,
     ):
         """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
@@ -511,7 +516,9 @@ class FuelMap:
         # # assign data
         self.__assign_data_to_data_array(patch, fuel_key, walking_ignition_times, ignition_time, unburnable)
 
-    def add_fuel_line_patch(self, pos1: tuple, pos2: tuple, fuel_key: str, is_cartesian: bool = True):
+    def add_fuel_line_patch(
+        self, pos1: Sequence[float], pos2: Sequence[float], fuel_key: str, is_cartesian: bool = True
+    ):
         """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -554,7 +561,11 @@ class FuelMap:
         self.__add_line_patch(pos1, pos2, fuel_key=fuel_key, is_cartesian=is_cartesian)
 
     def add_walking_ignition_line_patch(
-        self, pos1: tuple, pos2: tuple, walking_ignition_times: list, is_cartesian: bool = True
+        self,
+        pos1: Sequence[float],
+        pos2: Sequence[float],
+        walking_ignition_times: Sequence[float],
+        is_cartesian: bool = True,
     ):
         """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
@@ -609,7 +620,7 @@ class FuelMap:
         )
 
     def add_ignition_line_patch(
-        self, pos1: tuple, pos2: tuple, ignition_time: float, is_cartesian: bool = True
+        self, pos1: Sequence[float], pos2: Sequence[float], ignition_time: float, is_cartesian: bool = True
     ):
         """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
@@ -651,7 +662,9 @@ class FuelMap:
         """
         self.__add_line_patch(pos1, pos2, ignition_time=ignition_time, is_cartesian=is_cartesian)
 
-    def add_unburnable_line_patch(self, pos1: tuple, pos2: tuple, is_cartesian: bool = True):
+    def add_unburnable_line_patch(
+        self, pos1: Sequence[float], pos2: Sequence[float], is_cartesian: bool = True
+    ):
         """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -693,10 +706,10 @@ class FuelMap:
     def __assign_data_to_data_array(
         self,
         patch: DataPatch,
-        fuel_key: str = None,
-        walkingignitiontimes: tuple = None,
-        ignitiontime: float = None,
-        unburnable: bool = None,
+        fuel_key: str | None = None,
+        walkingignitiontimes: Sequence[float] | None = None,
+        ignitiontime: float | None = None,
+        unburnable: bool | None = None,
     ):
         """
         This function assigns data as a function of argument passed

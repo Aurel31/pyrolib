@@ -59,7 +59,7 @@ class DataPatch(ABC):
         self.datamask = np.zeros_like((self.nyf, self.nxf))
 
     @abstractmethod
-    def getmask(self):
+    def getmask(self, xfiremesh, yfiremesh, XFIREMESHSIZE):
         raise NotImplementedError
 
 

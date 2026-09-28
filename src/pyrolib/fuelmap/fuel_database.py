@@ -116,8 +116,6 @@ class FuelDatabase:
             compact (bool, optional): writting format. Defaults to True.
         """
         # check file name
-        if filename is None:
-            filename = self.name
         if filename.endswith(".yml"):
             fname = filename
         else:
