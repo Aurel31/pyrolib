@@ -1,10 +1,9 @@
-""" CLI utilities
-"""
+"""CLI utilities"""
 
 import os
+from importlib.resources import files
 
 import click
-from importlib.resources import files
 import yaml
 
 from pyrolib import __name__ as pyrolib_name
@@ -43,7 +42,7 @@ def list_fuel_databases(short):
     print("----- pyrolib available database -----")
     for file in data_dir_content:
         if file.endswith(".yml"):
-            print(f"  * {file.replace('.yml','')}")
+            print(f"  * {file.replace('.yml', '')}")
             if short:
                 # print db fuels
                 with data_dir.joinpath(file).open("r") as ymlfile:
@@ -61,11 +60,11 @@ def list_fuel_databases(short):
     for file in data_dir_content:
         if file.endswith(".yml"):
             # load file
-            with open(file, "r") as ymlfile:
+            with open(file) as ymlfile:
                 alldata = yaml.safe_load(ymlfile)
             # check if is_compact, infos, and fuels are in keys
             if "is_compact" in alldata.keys() and "infos" in alldata.keys() and "fuels" in alldata.keys():
-                print(f"  * {file.replace('.yml','')}")
+                print(f"  * {file.replace('.yml', '')}")
                 if short:
                     # print db fuels
                     for fuel_description in alldata["fuels"].keys():

@@ -3,6 +3,7 @@ pyrolib.fuelmap package
 
 .. automodule:: pyrolib.fuelmap
    :members:
+   :ignore-module-all:
    :undoc-members:
    :show-inheritance:
 

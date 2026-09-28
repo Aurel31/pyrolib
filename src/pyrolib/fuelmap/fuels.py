@@ -1,8 +1,8 @@
-""" Fuel classes
-"""
+"""Fuel classes"""
 
 from abc import ABC, abstractmethod
 from math import atan, cos, pow, radians, sin, sqrt
+
 import numpy as np
 
 
@@ -158,7 +158,8 @@ class BaseFuel(ABC):
         """Construct the minimal dictionnary of the class.
 
         The minimal dictionnay contains the class name (key: class) and
-        the dictionnary of minimal dictionnaries of each :class:`~pyrolib.fuels.FuelProperty` attributes (key: properties).
+        the dictionnary of minimal dictionnaries of each :class:`~pyrolib.fuels.FuelProperty` attributes
+        (key: properties).
         If `compact` is `True` then the dictionnary of :class:`~pyrolib.fuels.FuelProperty` attributes `value`
         are stored instead
         of minimal dicctionnaries.
@@ -225,7 +226,8 @@ class BalbiFuel(BaseFuel):
     """Class of fuel for Balbi rate of spread model [1]_.
 
     New fuel class is set with default value.
-    Any fuel property can be passed explicitely to the constructor to set a different vaklue than the default one.
+    Any fuel property can be passed explicitely to the constructor
+    to set a different vaklue than the default one.
 
     Other Parameters
     ----------------
@@ -374,7 +376,8 @@ class BalbiFuel(BaseFuel):
         ----------
 
         .. [2] Costes, A., Rochoux, M. C., Lac, C., & Masson, V. (2021).
-               Subgrid-scale fire front reconstruction for ensemble coupled atmosphere-fire simulations of the FireFlux I experiment.
+               Subgrid-scale fire front reconstruction for ensemble coupled atmosphere-fire simulations
+               of the FireFlux I experiment.
                Fire Safety Journal, 126, 103475.
                https://doi.org/10.1016/j.firesaf.2021.103475
         """
@@ -440,7 +443,7 @@ def show_fuel_classes(show_fuel_properties=True):
     # Balbi
     print("\nMore information about fuel classes:")
     print(f"* < {type(BalbiFuel()).__name__} > class is compliant with the Balbi's ROS parameterization.")
-    print(f"  It is used when < CPROPAG_MODEL = SANTONI2011 > in the Méso-NH namelist.")
+    print("  It is used when < CPROPAG_MODEL = SANTONI2011 > in the Méso-NH namelist.")
     if show_fuel_properties:
         print("It contains the following properties with default value:")
         print(BalbiFuel())

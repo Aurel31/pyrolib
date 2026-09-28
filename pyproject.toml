@@ -49,6 +49,8 @@ docs = [
     "sphinx_rtd_theme>=3.0",
 ]
 numba = ["numba>=0.61"]
+# pinned: ty is pre-1.0 and its diagnostics shift between releases
+lint = ["ruff==0.16.9", "ty==0.0.84"]
 
 [project.scripts]
 pyrolib-fm = "pyrolib.cli_fuelmap:main_cli"
@@ -91,3 +93,16 @@ extend-exclude = ["docs", "examples"]
 select = ["E", "F", "W", "I", "UP", "B"]
 # sind/cosd in fuelmap/utility.py are deliberately terse lambdas.
 ignore = ["E731"]
+
+[tool.ruff.lint.per-file-ignores]
+# BalbiFuel property table is aligned by hand (see the `# fmt: off` block).
+"src/pyrolib/fuelmap/fuels.py" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pyrolib"]
+
+[tool.ty.environment]
+python-version = "3.10"
+
+[tool.ty.src]
+include = ["src", "tests"]

@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   written are unchanged.
 - the functional test checks the content of `FuelMap.nc` and `FuelMap2d.nc`
   (header, version metadata, 2D/3D packing, patch values), not only their existence.
+- the code base is formatted with `ruff format` and passes `ruff check`; CI now fails on
+  either. `ty` type checking runs in CI as an advisory step, and both tools are pinned
+  in a new `lint` extra (`pip install pyrolib[lint]`).
+- patch positions are annotated `Sequence[float]` instead of `tuple` (lists were always
+  accepted), and parameters defaulting to `None` are annotated `T | None`.
 
 ### Bug fix
 - `WalkingIgnition` holds the time the front reaches each cell center: the ignition
@@ -29,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the line (7.07 s instead of 5 s + 2.5 m / R0 for the first cell in the test case).
   The spread term is computed at dump time, so fuel patches may be added after the
   line; `FuelMap.get_walking_ignition_arrival_times` returns the field.
+- `FuelDatabase.dump_database(filename=None)` raised `AttributeError` on a
+  non-existent `name` attribute; the dead fallback is removed.
 - `convert_lon_lat_to_x_y` used a base-2 logarithm instead of the natural one, so
   patches positioned in lon/lat were placed off by a factor `log2(e)` on the `y`
   axis.

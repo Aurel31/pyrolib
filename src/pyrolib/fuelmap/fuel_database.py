@@ -1,15 +1,14 @@
-""" Fuel Database utilities
-"""
+"""Fuel Database utilities"""
 
+import errno
 import os
 import sys
-import errno
-
 from importlib.resources import files
+
 import yaml
 
 from .fuels import (
-    BalbiFuel,
+    BalbiFuel,  # noqa: F401 (fuel classes are looked up by name in this module's namespace)
 )
 
 
@@ -37,7 +36,7 @@ class FuelDatabase:
         try:
             defaultpath = files("pyrolib").joinpath(f"data/fuel_db/{fname}")
             defaultexists = defaultpath.is_file()
-        except:
+        except Exception:
             defaultexists = False
 
         # Check local path
@@ -47,7 +46,8 @@ class FuelDatabase:
         if defaultexists:
             if localexists:
                 print(
-                    f"INFO : pyrolib fuel database and local fuel database found with same name <{fname}>\nLocal fuel database loaded"
+                    f"INFO : pyrolib fuel database and local fuel database found with same name <{fname}>\n"
+                    "Local fuel database loaded"
                 )
                 FilePath = fname
             else:
@@ -59,13 +59,14 @@ class FuelDatabase:
                 FilePath = fname
             else:
                 print(
-                    f"ERROR : database <{fname}> not found in pyrolib fuel database directory nor local directory"
+                    f"ERROR : database <{fname}> not found in pyrolib fuel database directory "
+                    "nor local directory"
                 )
                 FilePath = fname
                 raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), fname)
 
         # load new fuels
-        with open(FilePath, "r") as ymlfile:
+        with open(FilePath) as ymlfile:
             alldata = yaml.safe_load(ymlfile)
             if "fuels" in alldata.keys() and "is_compact" in alldata.keys():
                 if alldata["is_compact"]:
@@ -90,9 +91,9 @@ class FuelDatabase:
                             # need to reconstruct properties dictionnary
                             propertiesdict = {}
                             for prop in alldata["fuels"][fuel_description][fuel]["properties"].keys():
-                                propertiesdict[prop] = alldata["fuels"][fuel_description][fuel][
-                                    "properties"
-                                ][prop]["Value"]
+                                propertiesdict[prop] = alldata["fuels"][fuel_description][fuel]["properties"][
+                                    prop
+                                ]["Value"]
 
                             # add a new fuel object to the fuel dict
                             fuel_dict[fuel] = getattr(
@@ -115,8 +116,6 @@ class FuelDatabase:
             compact (bool, optional): writting format. Defaults to True.
         """
         # check file name
-        if filename is None:
-            filename = self.name
         if filename.endswith(".yml"):
             fname = filename
         else:

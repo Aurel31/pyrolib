@@ -1,9 +1,9 @@
-""" Test blaze.py functions
-"""
+"""Test blaze.py functions"""
 
 import numpy as np
-import pyrolib.blaze as blz
 import pytest
+
+import pyrolib.blaze as blz
 
 
 @pytest.fixture(scope="function")

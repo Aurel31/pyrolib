@@ -1,41 +1,42 @@
-""" FuelMap file building tools
-"""
+"""FuelMap file building tools"""
 
-import sys
 import os
+import sys
+from collections.abc import Sequence
+from importlib.resources import files
 from math import pow
 from shutil import copy2
 
+import f90nml
 import numpy as np
-from importlib.resources import files
 import yaml
 from netCDF4 import Dataset
-import f90nml
 
+from .fuel_database import (
+    FuelDatabase,
+)
 from .fuels import (
     _ROSMODEL_FUELCLASS_REGISTER,
     _ROSMODEL_NB_PROPERTIES,
-    BalbiFuel,
+    BalbiFuel,  # noqa: F401 (fuel classes are looked up by name in this module's namespace)
 )
 from .patch import (
     DataPatch,
     LinePatch,
     RectanglePatch,
 )
-from .fuel_database import (
-    FuelDatabase,
-)
 from .utility import (
-    fire_array_2d_to_3d,
-    fill_fuel_array_from_patch,
     convert_lon_lat_to_x_y,
+    fill_fuel_array_from_patch,
+    fire_array_2d_to_3d,
 )
 
 
 class FuelMap:
     """Class for fuel map construction
 
-    This `FuelMap` class allows to create a fuel map object and save it to netcdf format to be an input for a MesoNH-Blaze simulation.
+    This `FuelMap` class allows to create a fuel map object and save it to netcdf format
+    to be an input for a MesoNH-Blaze simulation.
 
     In order to build a fuel map the following file tree is needed:
 
@@ -50,7 +51,8 @@ class FuelMap:
     The MesoNH namelist `EXSEG1.nam` is used to retrieved information about fire mesh,
     fire rate of spread parameterization and MesoNH initialization files.
     The initialization file (here `inifile_MesoNH.nc`) is used to get atmopsheric mesh information.
-    The MesoNH file `inifile_MesoNH.des` will be duplicated to `FuelMap.des` in order to match MesoNH file reader requirements.
+    The MesoNH file `inifile_MesoNH.des` will be duplicated to `FuelMap.des`
+    in order to match MesoNH file reader requirements.
 
     After having set all patches and data treatments to the `FuelMap.fuelmaparray`,
     the :func:`~pyrolib.fuels.FuelMap.write` method can be called to save the file `FuelMap.nc`.
@@ -68,7 +70,8 @@ class FuelMap:
         ├─ inifile_MesoNH.nc
 
     The file `FuelMap2d.nc` is optionnaly created through the :func:`~pyrolib.fuels.FuelMap.write` method.
-    It contains the same information that `FuelMap.nc` but conserves the 2d format of data to be more readable for error checking.
+    It contains the same information that `FuelMap.nc` but conserves the 2d format of data
+    to be more readable for error checking.
     It is recommended to use this file to check your set up.
 
     Parameters
@@ -135,7 +138,7 @@ class FuelMap:
             projectpath = self.workdir
         # Check if Namelist exists
         if not os.path.exists(f"{projectpath:s}/{self.namelist:s}"):
-            raise IOError(f"File {self.namelist:s} not found")
+            raise OSError(f"File {self.namelist:s} not found")
 
         # get MNH init file name
         mnh_nml = f90nml.read(f"{projectpath:s}/{self.namelist:s}")
@@ -153,10 +156,10 @@ class FuelMap:
 
         # Check if INIFILE.des exists
         if not os.path.exists(f"{projectpath:s}/{self.mnhinifile:s}.des"):
-            raise IOError(f"File {self.mnhinifile:s}.des not found")
+            raise OSError(f"File {self.mnhinifile:s}.des not found")
         # Check if INIFILE.nc exists
         if not os.path.exists(f"{projectpath:s}/{self.mnhinifile:s}.nc"):
-            raise IOError(f"File {self.mnhinifile:s}.nc not found")
+            raise OSError(f"File {self.mnhinifile:s}.nc not found")
 
         # Import XHAT and YHAT
         MNHData = Dataset(f"{projectpath:s}/{self.mnhinifile:s}.nc")
@@ -209,7 +212,7 @@ class FuelMap:
         )
         self.yfiremesh += 0.5 * (self.yfiremesh[1] - self.yfiremesh[0])
 
-    def __patch_position(self, pos1: tuple, pos2: tuple, is_cartesian: bool):
+    def __patch_position(self, pos1: Sequence[float], pos2: Sequence[float], is_cartesian: bool):
         """Return the (x, y) positions of a patch, converting from (lon, lat) if needed
 
         Parameters
@@ -240,11 +243,11 @@ class FuelMap:
 
     def __add_rectangle_patch(
         self,
-        pos1: tuple,
-        pos2: tuple,
-        fuel_key: str = None,
-        ignition_time: float = None,
-        unburnable: bool = None,
+        pos1: Sequence[float],
+        pos2: Sequence[float],
+        fuel_key: str | None = None,
+        ignition_time: float | None = None,
+        unburnable: bool | None = None,
         is_cartesian: bool = True,
     ):
         """Add rectangle patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
@@ -301,21 +304,22 @@ class FuelMap:
         xpos, ypos = self.__patch_position(pos1, pos2, is_cartesian)
 
         # Create mask
-        P = RectanglePatch(
-            self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize
-        )
+        P = RectanglePatch(self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize)
 
         # assign data
         self.__assign_data_to_data_array(P, fuel_key, None, ignition_time, unburnable)
 
-    def add_fuel_rectangle_patch(self, pos1: tuple, pos2: tuple, fuel_key: str, is_cartesian: bool = True):
+    def add_fuel_rectangle_patch(
+        self, pos1: Sequence[float], pos2: Sequence[float], fuel_key: str, is_cartesian: bool = True
+    ):
         """Add rectangle fuel patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
         then assigns the needed data in the appropriated array.
 
         It assigns a fuel type in the masked area through its index.
-        The fuel assigned depends on its index and the selected rate of spread parameterization in the Méso-NH namelist.
+        The fuel assigned depends on its index and the selected rate of spread parameterization
+        in the Méso-NH namelist.
 
 
         .. code-block:: text
@@ -352,7 +356,9 @@ class FuelMap:
         """
         self.__add_rectangle_patch(pos1, pos2, fuel_key=fuel_key, is_cartesian=is_cartesian)
 
-    def add_unburnable_rectangle_patch(self, pos1: tuple, pos2: tuple, is_cartesian: bool = True):
+    def add_unburnable_rectangle_patch(
+        self, pos1: Sequence[float], pos2: Sequence[float], is_cartesian: bool = True
+    ):
         """Add rectangle unburnable patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -394,7 +400,7 @@ class FuelMap:
         self.__add_rectangle_patch(pos1, pos2, unburnable=True, is_cartesian=is_cartesian)
 
     def add_ignition_rectangle_patch(
-        self, pos1: tuple, pos2: tuple, ignition_time: float, is_cartesian: bool = True
+        self, pos1: Sequence[float], pos2: Sequence[float], ignition_time: float, is_cartesian: bool = True
     ):
         """Add rectangle patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
@@ -440,12 +446,12 @@ class FuelMap:
 
     def __add_line_patch(
         self,
-        pos1: tuple,
-        pos2: tuple,
-        fuel_key: str = None,
-        walking_ignition_times: list = None,
-        ignition_time: float = None,
-        unburnable: bool = None,
+        pos1: Sequence[float],
+        pos2: Sequence[float],
+        fuel_key: str | None = None,
+        walking_ignition_times: Sequence[float] | None = None,
+        ignition_time: float | None = None,
+        unburnable: bool | None = None,
         is_cartesian: bool = True,
     ):
         """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
@@ -510,7 +516,9 @@ class FuelMap:
         # # assign data
         self.__assign_data_to_data_array(patch, fuel_key, walking_ignition_times, ignition_time, unburnable)
 
-    def add_fuel_line_patch(self, pos1: tuple, pos2: tuple, fuel_key: str, is_cartesian: bool = True):
+    def add_fuel_line_patch(
+        self, pos1: Sequence[float], pos2: Sequence[float], fuel_key: str, is_cartesian: bool = True
+    ):
         """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -553,7 +561,11 @@ class FuelMap:
         self.__add_line_patch(pos1, pos2, fuel_key=fuel_key, is_cartesian=is_cartesian)
 
     def add_walking_ignition_line_patch(
-        self, pos1: tuple, pos2: tuple, walking_ignition_times: list, is_cartesian: bool = True
+        self,
+        pos1: Sequence[float],
+        pos2: Sequence[float],
+        walking_ignition_times: Sequence[float],
+        is_cartesian: bool = True,
     ):
         """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
@@ -608,7 +620,7 @@ class FuelMap:
         )
 
     def add_ignition_line_patch(
-        self, pos1: tuple, pos2: tuple, ignition_time: float, is_cartesian: bool = True
+        self, pos1: Sequence[float], pos2: Sequence[float], ignition_time: float, is_cartesian: bool = True
     ):
         """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
@@ -650,7 +662,9 @@ class FuelMap:
         """
         self.__add_line_patch(pos1, pos2, ignition_time=ignition_time, is_cartesian=is_cartesian)
 
-    def add_unburnable_line_patch(self, pos1: tuple, pos2: tuple, is_cartesian: bool = True):
+    def add_unburnable_line_patch(
+        self, pos1: Sequence[float], pos2: Sequence[float], is_cartesian: bool = True
+    ):
         """Add line patch between (pos1[0], pos2[0]) and (pos1[1], pos2[1]).
 
         This method first sets the mask corresponding to the following scheme,
@@ -692,23 +706,24 @@ class FuelMap:
     def __assign_data_to_data_array(
         self,
         patch: DataPatch,
-        fuel_key: str = None,
-        walkingignitiontimes: tuple = None,
-        ignitiontime: float = None,
-        unburnable: bool = None,
+        fuel_key: str | None = None,
+        walkingignitiontimes: Sequence[float] | None = None,
+        ignitiontime: float | None = None,
+        unburnable: bool | None = None,
     ):
         """
         This function assigns data as a function of argument passed
 
         4 types of data can be allocated in the patch:
             - Fuel properties
-                Select a fuel number (it should be contained in the FuelDatabase object loaded in the FuelMap object).
+                Select a fuel number
+                (it should be contained in the FuelDatabase object loaded in the FuelMap object).
                 The corresponding fuel properties of the selected Fuel are assigned in the patch
 
             - Walking ignition times (only for LinePatch)
                 allocate ignition time from point A (x0, y0) at ta to point B (x1, y1) at tb with tb > ta
-                The ignition time along the line is linearly interpolated at the point of the segment closest to
-                each cell center. The spread from that point to the center is added at dump time.
+                The ignition time along the line is linearly interpolated at the point of the segment
+                closest to each cell center. The spread from that point to the center is added at dump time.
 
             - Ignition time
                 Modify the ignition map with the specified time.
@@ -716,7 +731,8 @@ class FuelMap:
 
             - Unburnable
                 Every fuel property is set to 0 in the patch leading to a no propagation zone.
-                Be carreful for futur implementation of new fire spread parameterization to not have 0 division with this process.
+                Be carreful for futur implementation of new fire spread parameterization
+                to not have 0 division with this process.
         """
         # case 1 : FuelIndex is set
         if isinstance(fuel_key, str):
@@ -749,7 +765,8 @@ class FuelMap:
                     )
                 else:
                     print(
-                        f"Fuel < {fuel_key} > do not exist in database with the needed Fuel Class < {needed_fuelclass} >."
+                        f"Fuel < {fuel_key} > do not exist in database "
+                        f"with the needed Fuel Class < {needed_fuelclass} >."
                     )
             else:
                 print(f"Fuel < {fuel_key} > not found in the fuel database. Nothing appended")
@@ -777,9 +794,7 @@ class FuelMap:
                 if totaldist2 > 0.0:
                     fraction = min(max((centerx * abx + centery * aby) / totaldist2, 0.0), 1.0)
                 # linear interpolation
-                self.walkingignitionmaparray[ind[1], ind[0]] = (
-                    walkingignitiontimes[0] + fraction * ignitiondt
-                )
+                self.walkingignitionmaparray[ind[1], ind[0]] = walkingignitiontimes[0] + fraction * ignitiondt
                 self.walkingignitiondistancearray[ind[1], ind[0]] = np.hypot(
                     centerx - fraction * abx, centery - fraction * aby
                 )
@@ -1084,9 +1099,7 @@ class FuelMap:
         # one variable per fuel property, at the slot given by its propertyindex
         if verbose >= 2:
             print(">> Store properties maps")
-        chosen_fuel_class = getattr(
-            sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]
-        )()
+        chosen_fuel_class = getattr(sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model])()
         for propertyname in vars(chosen_fuel_class):
             propertyobj = getattr(chosen_fuel_class, propertyname)
             if propertyobj.propertyindex is not None:

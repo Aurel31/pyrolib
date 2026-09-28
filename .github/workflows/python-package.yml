@@ -1,4 +1,4 @@
-# Install dependencies, lint, build and test across the supported Python versions.
+# Install dependencies, lint, type check, build and test across the supported Python versions.
 # See: https://docs.github.com/actions/automating-builds-and-tests/building-and-testing-python
 
 name: Python package
@@ -13,6 +13,36 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+
+    - uses: actions/setup-python@v7
+      with:
+        python-version: "3.12"
+        cache: pip
+        cache-dependency-path: pyproject.toml
+
+    # ruff and ty versions are pinned in the `lint` extra.
+    - name: Install package and lint dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install ".[lint,numba]"
+
+    - name: Lint with ruff
+      run: ruff check --output-format=github src tests
+
+    - name: Check formatting with ruff
+      run: ruff format --check --diff src tests
+
+    # Advisory until the code base is annotated: most remaining diagnostics are
+    # attributes initialised to None in __init__. Plain output on purpose, so the
+    # known diagnostics do not show up as annotations on every pull request.
+    - name: Type check with ty
+      continue-on-error: true
+      run: ty check --python "$(which python)" --output-format=concise
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -21,10 +51,10 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
         cache: pip
@@ -35,26 +65,15 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install ".[tests]"
 
-    - name: Lint with ruff (errors)
-      uses: astral-sh/ruff-action@v3
-      with:
-        args: check --select E9,F63,F7,F82 --output-format=github .
-
-    - name: Lint with ruff (full, advisory)
-      continue-on-error: true
-      uses: astral-sh/ruff-action@v3
-      with:
-        args: check --output-format=github .
-
     - name: Test with pytest
       run: pytest
 
   docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v7
       with:
         python-version: "3.12"
 
@@ -70,9 +89,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v7
       with:
         python-version: "3.12"
 
@@ -92,7 +111,7 @@ jobs:
         python -m zipfile -l dist/*.whl | grep 'pyrolib/data/fuel_db/DefaultSA.yml'
         python -m zipfile -l dist/*.whl | grep 'pyrolib/data/fuel_db/FireFluxI.yml'
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: dist
         path: dist/

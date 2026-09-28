@@ -3,6 +3,7 @@ pyrolib.blaze package
 
 .. automodule:: pyrolib.blaze
    :members:
+   :ignore-module-all:
    :undoc-members:
    :show-inheritance:
 

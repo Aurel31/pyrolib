@@ -1,0 +1,13 @@
+# Keep the GitHub Actions used in the workflows up to date.
+# Python dependencies are left out on purpose: ruff and ty are pinned in the
+# `lint` extra and bumped deliberately.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]

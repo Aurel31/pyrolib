@@ -1,5 +1,4 @@
-""" functional tests: walking ignition line patches
-"""
+"""functional tests: walking ignition line patches"""
 
 import os
 

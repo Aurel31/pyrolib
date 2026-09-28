@@ -137,3 +137,4 @@ FuelMap.des
 tmpCHANGELOG.md
 changelog_copy.md
 readme_copy.md
+.ruff_cache/

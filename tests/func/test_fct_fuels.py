@@ -1,5 +1,4 @@
-""" functional tests: build a fuel map on the examples/fuel_map fixtures and check the written files
-"""
+"""functional tests: build a fuel map on the examples/fuel_map fixtures and check the written files"""
 
 import os
 
