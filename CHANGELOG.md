@@ -6,39 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
 ## [Unreleased]
+
+## [0.5.1] 2026 / 09 / 28
 ### Added
-- patches positioned in (lon, lat) (`is_cartesian=False`) work on every `Méso-NH`
-  projection: `convert_lon_lat_to_x_y` is a full port of `SM_XYHAT_S` (Mercator,
-  Lambert conformal and polar-stereographic from either pole, with `BETA` rotation)
-  instead of raising `NotImplementedError` outside the unrotated Mercator case.
+- patches positioned in (lon, lat) work on every `Méso-NH` projection (Mercator,
+  Lambert conformal, polar-stereographic, with `BETA` rotation).
 
 ### Changed
-- `is_cartesian=False` on a cartesian domain (initialization file without `RPK`,
-  `LATORI`, `LONORI`) raises a `ValueError` naming the file instead of a `TypeError`.
-- `FuelMap.dump_mesonh` and `FuelMap.dump` share one netCDF header and fire-field
-  writer, so `FuelMap.nc` and `FuelMap2d.nc` can no longer diverge. The files
-  written are unchanged.
-- the functional test checks the content of `FuelMap.nc` and `FuelMap2d.nc`
-  (header, version metadata, 2D/3D packing, patch values), not only their existence.
-- the code base is formatted with `ruff format` and passes `ruff check`; CI now fails on
-  either. `ty` type checking runs in CI as an advisory step, and both tools are pinned
-  in a new `lint` extra (`pip install pyrolib[lint]`).
-- patch positions are annotated `Sequence[float]` instead of `tuple` (lists were always
-  accepted), and parameters defaulting to `None` are annotated `T | None`.
+- `is_cartesian=False` on a cartesian domain raises a `ValueError` instead of a `TypeError`.
+- `FuelMap.dump_mesonh` and `FuelMap.dump` share one netCDF writer; output is unchanged.
+- CI enforces `ruff check` and `ruff format`, and runs `ty` as advisory (`lint` extra).
 
 ### Bug fix
-- `WalkingIgnition` holds the time the front reaches each cell center: the ignition
-  time of the closest point of the segment AB, plus the distance from that point to the
-  center divided by the rate of spread of the fuel in the cell. It used to interpolate
-  times with the Euclidean distance to point A, which was wrong both along and across
-  the line (7.07 s instead of 5 s + 2.5 m / R0 for the first cell in the test case).
-  The spread term is computed at dump time, so fuel patches may be added after the
-  line; `FuelMap.get_walking_ignition_arrival_times` returns the field.
-- `FuelDatabase.dump_database(filename=None)` raised `AttributeError` on a
-  non-existent `name` attribute; the dead fallback is removed.
-- `convert_lon_lat_to_x_y` used a base-2 logarithm instead of the natural one, so
-  patches positioned in lon/lat were placed off by a factor `log2(e)` on the `y`
-  axis.
+- `Méso-NH` `6.1.0` aborted when reading `FuelMap.nc`: the `MNH_REDUCE_FLOAT_PRECISION`
+  and `MNH_COMPRESS_LOSSY` global attributes are now written.
+- walking ignition times are computed from the closest point of the segment plus the
+  spread time to each cell, instead of the distance to its first point.
+- `convert_lon_lat_to_x_y` used a base-2 logarithm instead of the natural one.
+- `FuelDatabase.dump_database(filename=None)` raised `AttributeError`.
 
 ## [0.5.0] 2026 / 08 / 12
 **Warning**: the default `Méso-NH` version is now `6.1.0`. Runs targeting `5.6.0`

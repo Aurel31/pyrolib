@@ -23,7 +23,7 @@ from pyrolib import __version__ as pyrover  # noqa: E402
 # -- Project information -----------------------------------------------------
 
 project = "pyrolib"
-copyright = "2022, Aurélien Costes"
+copyright = "2022-2026, Aurélien Costes and contributors"
 author = "Aurélien Costes"
 
 
