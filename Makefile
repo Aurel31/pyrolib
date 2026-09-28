@@ -1,4 +1,4 @@
-.PHONY: doc test lint format clean build wheel upload_test upload
+.PHONY: doc test lint format typecheck clean build wheel upload_test upload
 
 doc:
 	rm -rf docs/_build
@@ -9,9 +9,13 @@ test:
 
 lint:
 	ruff check src tests
+	ruff format --check src tests
 
 format:
 	ruff format src tests
+
+typecheck:
+	ty check
 
 clean:
 	rm -rf build dist src/*.egg-info

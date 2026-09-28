@@ -11,20 +11,22 @@ Package layout is `src/`-based with three sub-packages: `pyrolib.fuelmap`, `pyro
 ## Commands
 
 ```bash
-pip install -e ".[tests]"      # dev install (extras: tests, docs, numba)
+pip install -e ".[tests,lint]" # dev install (extras: tests, lint, docs, numba)
 pytest                         # run all tests
 pytest tests/unit/test_fuels.py::test_property_set   # single test
 make test                      # same as pytest
-make lint                      # ruff check src tests
+make lint                      # ruff check + ruff format --check on src tests
+make format                    # ruff format src tests
+make typecheck                 # ty check (advisory)
 make doc                       # sphinx build into docs/_build (deletes it first)
 make build                     # sdist + wheel via python -m build
 ```
 
 Tests in `tests/func/` build real fuel maps against `examples/fuel_map/` using `os.getcwd()`. `tests/conftest.py` has an autouse fixture that chdirs to pytest's `rootpath` (anchored on `pyproject.toml`), so pytest works from any directory — but the tests still write and delete `FuelMap.nc` / `FuelMap.des` / `FuelMap2d.nc` inside `examples/fuel_map/`, and a crashed run leaves those behind.
 
-CI (`.github/workflows/python-package.yml`) has three jobs: `test` (ruff `E9,F63,F7,F82` as a hard failure and a full advisory `continue-on-error` run, then pytest, on Python 3.10–3.13), `docs` (`sphinx -b html -W`, so doc warnings fail CI rather than the published site), and `build` (`python -m build`, `twine check --strict`, plus a grep asserting the wheel contains `data/fuel_db/*.yml`). Ruff config lives in `pyproject.toml` at line-length 110; `fuels.py` property tables are aligned by hand and guarded with `# fmt: off` / `# fmt: on`.
+CI (`.github/workflows/python-package.yml`) has four jobs: `lint` (`ruff check` and `ruff format --check` on `src tests` as hard failures, then `ty check` as `continue-on-error`), `test` (pytest on Python 3.10–3.13), `docs` (`sphinx -b html -W`, so doc warnings fail CI rather than the published site), and `build` (`python -m build`, `twine check --strict`, plus a grep asserting the wheel contains `data/fuel_db/*.yml`). Ruff and ty config live in `pyproject.toml` (line-length 110); their versions are pinned in the `lint` extra, so bump them there deliberately. `fuels.py` property tables are aligned by hand, guarded with `# fmt: off` / `# fmt: on` and exempt from `E501`. The whole-repo `ruff format` commit is listed in `.git-blame-ignore-revs`.
 
-The full advisory ruff run reports ~95 pre-existing findings (mostly F541 f-strings without placeholders, `E741` `l`, import order). These are knowingly left alone — do not mass-fix them as a side effect of unrelated work.
+The code base is ruff-clean and ruff-formatted, and CI keeps it that way. ty is advisory: its remaining diagnostics (about 20) are mostly attributes initialised to `None` in `__init__` and `LinePatch`-only attributes read through a `DataPatch`. They go away as the code is annotated, not with suppressions. The `BalbiFuel` imports in `fuel_database.py` and `fuelmap.py` look unused but feed the by-name class lookup, hence their `noqa: F401`.
 
 ## Architecture
 

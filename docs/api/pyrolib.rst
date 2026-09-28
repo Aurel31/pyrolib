@@ -3,6 +3,7 @@ pyrolib package
 
 .. automodule:: pyrolib
    :members:
+   :ignore-module-all:
    :undoc-members:
    :show-inheritance:
 

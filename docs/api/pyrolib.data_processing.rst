@@ -3,6 +3,7 @@ pyrolib.data\_processing package
 
 .. automodule:: pyrolib.data_processing
    :members:
+   :ignore-module-all:
    :undoc-members:
    :show-inheritance:
 
