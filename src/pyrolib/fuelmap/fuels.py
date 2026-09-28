@@ -1,5 +1,4 @@
-""" Fuel classes
-"""
+"""Fuel classes"""
 
 from abc import ABC, abstractmethod
 from math import atan, cos, pow, radians, sin, sqrt

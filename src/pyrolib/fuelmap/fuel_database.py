@@ -1,5 +1,4 @@
-""" Fuel Database utilities
-"""
+"""Fuel Database utilities"""
 
 import os
 import sys
@@ -90,9 +89,9 @@ class FuelDatabase:
                             # need to reconstruct properties dictionnary
                             propertiesdict = {}
                             for prop in alldata["fuels"][fuel_description][fuel]["properties"].keys():
-                                propertiesdict[prop] = alldata["fuels"][fuel_description][fuel][
-                                    "properties"
-                                ][prop]["Value"]
+                                propertiesdict[prop] = alldata["fuels"][fuel_description][fuel]["properties"][
+                                    prop
+                                ]["Value"]
 
                             # add a new fuel object to the fuel dict
                             fuel_dict[fuel] = getattr(

@@ -1,5 +1,4 @@
-""" Patch classes
-"""
+"""Patch classes"""
 
 from abc import ABC, abstractmethod
 

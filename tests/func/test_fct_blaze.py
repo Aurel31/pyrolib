@@ -1,5 +1,4 @@
-""" Test blaze.py functions
-"""
+"""Test blaze.py functions"""
 
 import numpy as np
 import pyrolib.blaze as blz

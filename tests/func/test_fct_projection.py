@@ -1,5 +1,4 @@
-""" functional tests: patches positioned in (lon, lat) on a Méso-NH conformal projection
-"""
+"""functional tests: patches positioned in (lon, lat) on a Méso-NH conformal projection"""
 
 import os
 import shutil

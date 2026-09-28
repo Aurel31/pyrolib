@@ -1,5 +1,4 @@
-""" CLI utilities
-"""
+"""CLI utilities"""
 
 import os
 

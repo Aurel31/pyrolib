@@ -1,5 +1,4 @@
-""" FuelMap file building tools
-"""
+"""FuelMap file building tools"""
 
 import sys
 import os
@@ -301,9 +300,7 @@ class FuelMap:
         xpos, ypos = self.__patch_position(pos1, pos2, is_cartesian)
 
         # Create mask
-        P = RectanglePatch(
-            self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize
-        )
+        P = RectanglePatch(self.fuelmaparray, xpos, ypos, self.xfiremesh, self.yfiremesh, self.xfiremeshsize)
 
         # assign data
         self.__assign_data_to_data_array(P, fuel_key, None, ignition_time, unburnable)
@@ -777,9 +774,7 @@ class FuelMap:
                 if totaldist2 > 0.0:
                     fraction = min(max((centerx * abx + centery * aby) / totaldist2, 0.0), 1.0)
                 # linear interpolation
-                self.walkingignitionmaparray[ind[1], ind[0]] = (
-                    walkingignitiontimes[0] + fraction * ignitiondt
-                )
+                self.walkingignitionmaparray[ind[1], ind[0]] = walkingignitiontimes[0] + fraction * ignitiondt
                 self.walkingignitiondistancearray[ind[1], ind[0]] = np.hypot(
                     centerx - fraction * abx, centery - fraction * aby
                 )
@@ -1084,9 +1079,7 @@ class FuelMap:
         # one variable per fuel property, at the slot given by its propertyindex
         if verbose >= 2:
             print(">> Store properties maps")
-        chosen_fuel_class = getattr(
-            sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model]
-        )()
+        chosen_fuel_class = getattr(sys.modules[__name__], _ROSMODEL_FUELCLASS_REGISTER[self.cpropag_model])()
         for propertyname in vars(chosen_fuel_class):
             propertyobj = getattr(chosen_fuel_class, propertyname)
             if propertyobj.propertyindex is not None:

@@ -1,5 +1,4 @@
-"""Post-processing of FireFlux I raw data
-"""
+"""Post-processing of FireFlux I raw data"""
 
 from datetime import datetime, timedelta
 import csv

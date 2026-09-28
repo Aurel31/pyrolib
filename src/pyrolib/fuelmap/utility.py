@@ -1,5 +1,4 @@
-""" FuelMap utility tools
-"""
+"""FuelMap utility tools"""
 
 from math import ceil, floor
 import numpy as np
