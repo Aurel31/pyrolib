@@ -5,6 +5,6 @@ __version__ = "0.5.0"
 __maintainer__ = "Aurélien Costes"
 __email__ = "aurelien.costes31@gmail.com"
 
-from . import fuelmap
-from . import data_processing
-from . import blaze
+from . import blaze, data_processing, fuelmap
+
+__all__ = ["blaze", "data_processing", "fuelmap"]

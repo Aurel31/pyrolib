@@ -1,40 +1,41 @@
 """FuelMap file building tools"""
 
-import sys
 import os
+import sys
+from importlib.resources import files
 from math import pow
 from shutil import copy2
 
+import f90nml
 import numpy as np
-from importlib.resources import files
 import yaml
 from netCDF4 import Dataset
-import f90nml
 
+from .fuel_database import (
+    FuelDatabase,
+)
 from .fuels import (
     _ROSMODEL_FUELCLASS_REGISTER,
     _ROSMODEL_NB_PROPERTIES,
-    BalbiFuel,
+    BalbiFuel,  # noqa: F401 (fuel classes are looked up by name in this module's namespace)
 )
 from .patch import (
     DataPatch,
     LinePatch,
     RectanglePatch,
 )
-from .fuel_database import (
-    FuelDatabase,
-)
 from .utility import (
-    fire_array_2d_to_3d,
-    fill_fuel_array_from_patch,
     convert_lon_lat_to_x_y,
+    fill_fuel_array_from_patch,
+    fire_array_2d_to_3d,
 )
 
 
 class FuelMap:
     """Class for fuel map construction
 
-    This `FuelMap` class allows to create a fuel map object and save it to netcdf format to be an input for a MesoNH-Blaze simulation.
+    This `FuelMap` class allows to create a fuel map object and save it to netcdf format
+    to be an input for a MesoNH-Blaze simulation.
 
     In order to build a fuel map the following file tree is needed:
 
@@ -49,7 +50,8 @@ class FuelMap:
     The MesoNH namelist `EXSEG1.nam` is used to retrieved information about fire mesh,
     fire rate of spread parameterization and MesoNH initialization files.
     The initialization file (here `inifile_MesoNH.nc`) is used to get atmopsheric mesh information.
-    The MesoNH file `inifile_MesoNH.des` will be duplicated to `FuelMap.des` in order to match MesoNH file reader requirements.
+    The MesoNH file `inifile_MesoNH.des` will be duplicated to `FuelMap.des`
+    in order to match MesoNH file reader requirements.
 
     After having set all patches and data treatments to the `FuelMap.fuelmaparray`,
     the :func:`~pyrolib.fuels.FuelMap.write` method can be called to save the file `FuelMap.nc`.
@@ -67,7 +69,8 @@ class FuelMap:
         ├─ inifile_MesoNH.nc
 
     The file `FuelMap2d.nc` is optionnaly created through the :func:`~pyrolib.fuels.FuelMap.write` method.
-    It contains the same information that `FuelMap.nc` but conserves the 2d format of data to be more readable for error checking.
+    It contains the same information that `FuelMap.nc` but conserves the 2d format of data
+    to be more readable for error checking.
     It is recommended to use this file to check your set up.
 
     Parameters
@@ -134,7 +137,7 @@ class FuelMap:
             projectpath = self.workdir
         # Check if Namelist exists
         if not os.path.exists(f"{projectpath:s}/{self.namelist:s}"):
-            raise IOError(f"File {self.namelist:s} not found")
+            raise OSError(f"File {self.namelist:s} not found")
 
         # get MNH init file name
         mnh_nml = f90nml.read(f"{projectpath:s}/{self.namelist:s}")
@@ -152,10 +155,10 @@ class FuelMap:
 
         # Check if INIFILE.des exists
         if not os.path.exists(f"{projectpath:s}/{self.mnhinifile:s}.des"):
-            raise IOError(f"File {self.mnhinifile:s}.des not found")
+            raise OSError(f"File {self.mnhinifile:s}.des not found")
         # Check if INIFILE.nc exists
         if not os.path.exists(f"{projectpath:s}/{self.mnhinifile:s}.nc"):
-            raise IOError(f"File {self.mnhinifile:s}.nc not found")
+            raise OSError(f"File {self.mnhinifile:s}.nc not found")
 
         # Import XHAT and YHAT
         MNHData = Dataset(f"{projectpath:s}/{self.mnhinifile:s}.nc")
@@ -312,7 +315,8 @@ class FuelMap:
         then assigns the needed data in the appropriated array.
 
         It assigns a fuel type in the masked area through its index.
-        The fuel assigned depends on its index and the selected rate of spread parameterization in the Méso-NH namelist.
+        The fuel assigned depends on its index and the selected rate of spread parameterization
+        in the Méso-NH namelist.
 
 
         .. code-block:: text
@@ -699,13 +703,14 @@ class FuelMap:
 
         4 types of data can be allocated in the patch:
             - Fuel properties
-                Select a fuel number (it should be contained in the FuelDatabase object loaded in the FuelMap object).
+                Select a fuel number
+                (it should be contained in the FuelDatabase object loaded in the FuelMap object).
                 The corresponding fuel properties of the selected Fuel are assigned in the patch
 
             - Walking ignition times (only for LinePatch)
                 allocate ignition time from point A (x0, y0) at ta to point B (x1, y1) at tb with tb > ta
-                The ignition time along the line is linearly interpolated at the point of the segment closest to
-                each cell center. The spread from that point to the center is added at dump time.
+                The ignition time along the line is linearly interpolated at the point of the segment
+                closest to each cell center. The spread from that point to the center is added at dump time.
 
             - Ignition time
                 Modify the ignition map with the specified time.
@@ -713,7 +718,8 @@ class FuelMap:
 
             - Unburnable
                 Every fuel property is set to 0 in the patch leading to a no propagation zone.
-                Be carreful for futur implementation of new fire spread parameterization to not have 0 division with this process.
+                Be carreful for futur implementation of new fire spread parameterization
+                to not have 0 division with this process.
         """
         # case 1 : FuelIndex is set
         if isinstance(fuel_key, str):
@@ -746,7 +752,8 @@ class FuelMap:
                     )
                 else:
                     print(
-                        f"Fuel < {fuel_key} > do not exist in database with the needed Fuel Class < {needed_fuelclass} >."
+                        f"Fuel < {fuel_key} > do not exist in database "
+                        f"with the needed Fuel Class < {needed_fuelclass} >."
                     )
             else:
                 print(f"Fuel < {fuel_key} > not found in the fuel database. Nothing appended")

@@ -1,8 +1,8 @@
 """unit tests blaze.py functions"""
 
 import numpy as np
-from pyrolib.blaze.subgrid_burning_area import _surf68, _surf22, _surf70
-import pytest
+
+from pyrolib.blaze.subgrid_burning_area import _surf22, _surf68, _surf70
 
 
 def test_surf68():

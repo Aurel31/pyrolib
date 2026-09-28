@@ -52,13 +52,11 @@ def rearrange_netcdf(files, remove):
                 grid_u_x = src.variables["ni_u"]
                 grid_v_y = src.variables["nj_v"]
                 need_fire_grid = False
-                ref_fire_field = None
                 # search for at least one fire field
                 for fire_field in LIST_FIRE_FIELD:
                     if fire_field in src.variables.keys():
                         # match with one fire field
                         need_fire_grid = True
-                        ref_fire_field = fire_field
 
                 if need_fire_grid:
                     # fire grid refinement ratio

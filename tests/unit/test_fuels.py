@@ -1,12 +1,13 @@
 """unit tests fuels.py functions"""
 
+from math import cos, radians
+
 import pytest
+from numpy import isclose
 
 import pyrolib.fuelmap as pl
 from pyrolib.fuelmap.fuels import FuelProperty
 from pyrolib.fuelmap.utility import convert_lon_lat_to_x_y
-from numpy import isclose
-from math import cos, radians
 
 """
 Parameter
@@ -19,7 +20,7 @@ def test_property_init():
     assert fuelproperty.value == 0.0
     assert fuelproperty.unit == "-"
     assert fuelproperty.description == "none"
-    assert fuelproperty.propertyindex == None
+    assert fuelproperty.propertyindex is None
 
 
 def test_property_set():

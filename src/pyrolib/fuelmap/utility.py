@@ -1,6 +1,7 @@
 """FuelMap utility tools"""
 
 from math import ceil, floor
+
 import numpy as np
 
 try:
@@ -86,16 +87,16 @@ def fire_array_2d_to_3d(firearray2d, nx, ny, gammax, gammay):
     """
     farray3d = np.zeros((gammax * gammay, ny, nx))
     for m in range(1, ny * gammay + 1):
-        for l in range(1, nx * gammax + 1):
+        for ll in range(1, nx * gammax + 1):
             # compute i,j,k
-            i = ceil(float(l) / float(gammax))
+            i = ceil(float(ll) / float(gammax))
             j = ceil(float(m) / float(gammay))
-            a = l - (i - 1) * gammax
+            a = ll - (i - 1) * gammax
             b = m - (j - 1) * gammay
             k = (b - 1) * gammax + a
 
             # fill tables
-            farray3d[k - 1, j - 1, i - 1] = firearray2d[m - 1, l - 1]
+            farray3d[k - 1, j - 1, i - 1] = firearray2d[m - 1, ll - 1]
     return farray3d
 
 
@@ -128,8 +129,8 @@ def fire_array_3d_to_2d(firearray3d, nx, ny, gammax, gammay):
         for j in range(1, ny + 1):
             m = (j - 1) * gammay + b
             for i in range(1, nx + 1):
-                l = (i - 1) * gammax + a
-                farray2d[m - 1, l - 1] = firearray3d[k - 1, j - 1, i - 1]
+                ll = (i - 1) * gammax + a
+                farray2d[m - 1, ll - 1] = firearray3d[k - 1, j - 1, i - 1]
     return farray2d
 
 

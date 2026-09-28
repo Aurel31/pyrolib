@@ -1,7 +1,8 @@
 """Post-processing of FireFlux I raw data"""
 
-from datetime import datetime, timedelta
 import csv
+from datetime import datetime, timedelta
+
 import numpy as np
 
 _MTHeight = [0.1, 0.5, 0.75, 2, 4.5, 10, 15, 20, 25, 28, 30, 35, 43, 0.13, 1.47, 2.1]
@@ -76,7 +77,8 @@ class SonicTower:
 
     Extraction of Main Tower (MT) and Small Tower (ST) data.
 
-    Class objects for Main Tower and Small towers are already created in the package. Following classes are available:
+    Class objects for Main Tower and Small towers are already created in the package.
+    Following classes are available:
 
     >>> MT2  = SonicTower(height=2 , tower='main' )
     >>> MT10 = SonicTower(height=10, tower='main' )
@@ -126,7 +128,7 @@ class SonicTower:
 
     def get_wind_and_temp(self):
         """Import wind data and sonic temperature from data files."""
-        with open(f"{FireFluxDataPath:s}/{self.file:s}", "r") as f:
+        with open(f"{FireFluxDataPath:s}/{self.file:s}") as f:
             reader = csv.reader(f, delimiter=" ")
             NbofRow = sum(1 for row in reader)
             f.seek(0)
@@ -163,7 +165,7 @@ class SonicTower:
                     self.Ts[i] = float(row[10])
 
     def set_fail_sensor(self, timevector, failtime, endoffailtime=None):
-        """Set nan into TcFine temperature for failed sensor since failtime to endoffailtime (default infinity)
+        """Set nan into TcFine temperature for failed sensor since failtime to endoffailtime (default inf)
 
         Parameters
         ----------
@@ -225,7 +227,7 @@ class MainTowerTc:
 
         The file contains type T Thermocouple data for each height for Main Tower
         """
-        with open(f"{FireFluxDataPath:s}/{_DataFileName:s}", "r") as f:
+        with open(f"{FireFluxDataPath:s}/{_DataFileName:s}") as f:
             reader = csv.reader(f, delimiter=" ")
             next(f)
             # Count lines in file for memory allocation of data vectors

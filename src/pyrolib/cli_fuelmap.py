@@ -1,9 +1,9 @@
 """CLI utilities"""
 
 import os
+from importlib.resources import files
 
 import click
-from importlib.resources import files
 import yaml
 
 from pyrolib import __name__ as pyrolib_name
@@ -60,7 +60,7 @@ def list_fuel_databases(short):
     for file in data_dir_content:
         if file.endswith(".yml"):
             # load file
-            with open(file, "r") as ymlfile:
+            with open(file) as ymlfile:
                 alldata = yaml.safe_load(ymlfile)
             # check if is_compact, infos, and fuels are in keys
             if "is_compact" in alldata.keys() and "infos" in alldata.keys() and "fuels" in alldata.keys():
